@@ -26,9 +26,21 @@ theorem IsFormallyReal.equiv_def [AddCommMonoid R] [Mul R] [One R] :
 theorem IsFormallyReal.equiv_def_2 [AddMonoid R] [Mul R] [One R] :
   IsFormallyReal R ↔ (∀ {S₁ S₂}, IsSumSq S₁ → IsSumSq S₂ → S₁ + S₂ = 0 → S₁ = 0) := sorry
 
-def RingConeWithSquares.sumSqIn [CommRing R] [IsFormallyReal R] : RingConeWithSquares R where
-  __ := Subsemiring.sumSqIn R
-  square_mem' a := isSumSq_mul_self a
-  eq_zero_of_mem_of_neg_mem' ha hna :=
-    have := (IsFormallyReal.equiv_def_2 R).mpr ha hna
-    sorry
+namespace RingConeWithSquares
+variable {T : Type*} [CommRing T] [IsFormallyReal T] {a : T}
+
+variable (T) in
+/--
+In a commutative semiring `R`, the type `Subsemiring.sumSqIn R`
+is the subsemiring of sums of squares in `R`.
+-/
+def sumSqIn : RingConeWithSquares T where
+  __ := Subsemiring.sumSqIn T
+  square_mem' x := isSumSq_mul_self x
+  eq_zero_of_mem_of_neg_mem' x hx hnx := sorry
+
+@[simp] lemma sumSqIn_toSubsemiring : (sumSqIn T).toSubsemiring = .sumSqIn T := rfl
+@[simp] lemma mem_sumSqIn : a ∈ sumSqIn T ↔ IsSumSq a := Iff.rfl
+@[simp, norm_cast] lemma coe_sumSqIn : sumSqIn T = {x : T | IsSumSq x} := rfl
+
+end RingConeWithSquares
