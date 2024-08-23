@@ -3,8 +3,8 @@ Copyright (c) 2016 Jeremy Avigad. All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Jeremy Avigad, Leonardo de Moura, Mario Carneiro, Artie Khovanov
 -/
-import Mathlib.Algebra.Order.Group.Cone
-import Mathlib.Algebra.Order.Ring.Basic
+import RealClosedField.Mathlib.Algebra.Order.Group.Cone
+import RealClosedField.Mathlib.Algebra.Order.Ring.Basic
 import Mathlib.Algebra.Ring.Subsemiring.Order
 
 /-!
