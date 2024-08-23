@@ -24,7 +24,7 @@ theorem IsFormallyReal.equiv_def [AddCommMonoid R] [Mul R] [One R] :
   IsFormallyReal R ↔ (∀ S : Finset R, ∑ x ∈ S, x * x = 0 → ∀ x ∈ S, x = 0) := sorry
 
 theorem IsFormallyReal.equiv_def_2 [AddMonoid R] [Mul R] [One R] :
-  IsFormallyReal R ↔ (∀ {S₁ S₂}, IsSumSq S₁ → IsSumSq S₂ → S₁ + S₂ = 0 → S₁ = 0) := sorry
+  IsFormallyReal R ↔ (∀ {S₁ S₂ : R}, IsSumSq S₁ → IsSumSq S₂ → S₁ + S₂ = 0 → S₁ = 0) := sorry
 
 namespace RingConeWithSquares
 variable {T : Type*} [CommRing T] [IsFormallyReal T] {a : T}
@@ -37,7 +37,8 @@ is the subsemiring of sums of squares in `R`.
 def sumSqIn : RingConeWithSquares T where
   __ := Subsemiring.sumSqIn T
   square_mem' x := isSumSq_mul_self x
-  eq_zero_of_mem_of_neg_mem' x hx hnx := sorry
+  eq_zero_of_mem_of_neg_mem' {x} hx hnx :=
+    (IsFormallyReal.equiv_def_2 T).mp ‹IsFormallyReal T› hx hnx (add_neg_cancel x)
 
 @[simp] lemma sumSqIn_toSubsemiring : (sumSqIn T).toSubsemiring = .sumSqIn T := rfl
 @[simp] lemma mem_sumSqIn : a ∈ sumSqIn T ↔ IsSumSq a := Iff.rfl
