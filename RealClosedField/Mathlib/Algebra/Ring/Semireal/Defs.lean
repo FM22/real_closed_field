@@ -3,8 +3,8 @@ Copyright (c) 2024 Florent Schaffhauser. All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Florent Schaffhauser, Artie Khovanov
 -/
-import RealClosedField.Mathlib.Algebra.Ring.SumsOfSquares
 import Mathlib.Algebra.Order.Ring.Defs
+import RealClosedField.Mathlib.Algebra.Ring.SumsOfSquares
 
 /-!
 # Semireal rings
@@ -33,13 +33,10 @@ a multiplication, an addition, a multiplicative unit and an additive unit.
 -/
 @[mk_iff]
 class IsSemireal [Add R] [Mul R] [One R] [Zero R] : Prop where
-  not_IsSumSq_neg_one (a : R) (ssa : IsSumSq a) : ¬ (1 + a = 0)
-
-@[deprecated (since := "2024-08-09")] alias isSemireal := IsSemireal
-@[deprecated (since := "2024-08-09")] alias isSemireal.neg_one_not_SumSq :=
-  IsSemireal.not_IsSumSq_neg_one
+  add_one_ne_zero_of_isSumSq (a : R) (ssa : IsSumSq a) : ¬ (1 + a = 0)
 
 /-- Linearly ordered semirings in which the property `a ≤ b → ∃ c, a + c = b` holds are semireal. -/
 instance [LinearOrderedSemiring R] [ExistsAddOfLE R] : IsSemireal R where
-  not_IsSumSq_neg_one _ ssa amo :=
-    zero_ne_one' R (le_antisymm zero_le_one (le_of_le_of_eq (le_add_of_nonneg_right ssa.nonneg) amo))
+  add_one_ne_zero_of_isSumSq _ ssa amo :=
+    zero_ne_one' R (le_antisymm zero_le_one
+      (le_of_le_of_eq (le_add_of_nonneg_right ssa.nonneg) amo))

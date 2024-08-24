@@ -1,5 +1,6 @@
 import RealClosedField.Mathlib.Algebra.Order.Ring.Cone
 import RealClosedField.Mathlib.Algebra.Ring.Semireal.Defs
+import Mathlib.Data.Matrix.Notation
 
 variable (R : Type*)
 
@@ -10,7 +11,7 @@ export IsFormallyReal (not_nontrivial_isSumSq_eq_zero)
 
 instance [MulZeroOneClass R] [Add R] [Nontrivial R] [IsFormallyReal R] :
     IsSemireal R where
-  not_IsSumSq_neg_one a ssa amo :=
+  add_one_ne_zero_of_isSumSq a ssa amo :=
     one_ne_zero' R (not_nontrivial_isSumSq_eq_zero 1 a ssa (by simpa using amo))
 
 instance [LinearOrderedRing R] : IsFormallyReal R where
@@ -33,20 +34,23 @@ theorem IsFormallyReal.no_nontrivial_add_isSumSq_eq_zero
     have sz : S = 0 := ih (by simpa [az] using hSum);
     simp [az, sz]
 
-theorem IsFormallyReal.equiv_def_2 [NonUnitalNonAssocSemiring R] [NoZeroDivisors R] :
+variable {R} in
+theorem is_formally_real_iff_no_nontrivial_add_isSumSq_eq_zero
+    [NonUnitalNonAssocSemiring R] [NoZeroDivisors R] :
     IsFormallyReal R ↔ (∀ {S₁ S₂ : R}, IsSumSq S₁ → IsSumSq S₂ → S₁ + S₂ = 0 → S₁ = 0) := by
   apply Iff.intro
   case mp  => intro _; exact IsFormallyReal.no_nontrivial_add_isSumSq_eq_zero
   case mpr =>
     intro no_nontriv_sum; constructor; intros a S hS sum_zero;
-    exact mul_self_eq_zero.mp (no_nontriv_sum (isSumSq_mul_self a) hS sum_zero)
+    exact mul_self_eq_zero.mp (no_nontriv_sum (IsSumSq.mul_self a) hS sum_zero)
 
-theorem IsFormallyReal.equiv_def [AddCommMonoid R] [Mul R] :
-  IsFormallyReal R ↔ (∀ S : Finset R, ∑ x ∈ S, x * x = 0 → ∀ x ∈ S, x = 0) := by
+variable {R} in
+theorem IsFormallyReal.equiv_def_finsum [NonUnitalNonAssocSemiring R] :
+  IsFormallyReal R ↔
+  (∀ {α : Type} {I : Finset α} (x : α → R), ∑ i ∈ I, x i * x i = 0 → ∀ i ∈ I, x i = 0) := by
   apply Iff.intro
   case mp  => intros formReal S sum_eq_zero x x_mem_S; sorry
-  case mpr => intro no_nontrivial_sum_squares; constructor; intro a S hS sum_zero; induction hS
-
+  case mpr => intro no_nontrivial_sum_squares; constructor; intro a S hS sum_zero; sorry
 
 namespace RingConeWithSquares
 variable {T : Type*} [CommRing T] [IsFormallyReal T] {a : T}
@@ -58,7 +62,7 @@ is the subsemiring of sums of squares in `R`.
 -/
 def sumSqIn : RingConeWithSquares T where
   __ := Subsemiring.sumSqIn T
-  square_mem' x := isSumSq_mul_self x
+  square_mem' x := IsSumSq.mul_self x
   eq_zero_of_mem_of_neg_mem' {x} hx hnx :=
     IsFormallyReal.no_nontrivial_add_isSumSq_eq_zero hx hnx (add_neg_cancel x)
 
