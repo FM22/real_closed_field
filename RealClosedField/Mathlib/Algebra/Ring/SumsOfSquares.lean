@@ -117,7 +117,7 @@ theorem IsSumSq.sum_mul_self [AddCommMonoid R] [Mul R]
 
 open AddSubmonoid in
 /-- A term of `R` satisfies `IsSumSq` if and only if it can be written as `∑ i ∈ I, x i * x i`. -/
-theorem isSumSq_iff_finsum [AddCommMonoid R] [Mul R] (a : R) :
+theorem isSumSq_iff_exists_sum [AddCommMonoid R] [Mul R] (a : R) :
     IsSumSq a ↔
     (∃ (ι : Type) (I : Finset ι) (x : ι → R), a = ∑ i ∈ I, x i * x i) := by
   apply Iff.intro
