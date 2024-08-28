@@ -13,15 +13,16 @@ export IsFormallyReal (eq_zero_of_sum_of_squares_eq_zero)
 variable {R} in
 theorem IsFormallyReal.equiv_def_inductive [NonUnitalNonAssocSemiring R] :
   IsFormallyReal R ↔
-  ∀ (a S : R) (hS : IsSumSq S) (h_zero : a * a + S = 0), a = 0 := by
+  ∀ {a : R}, a * a = 0 → a  = 0 ∧
+  ∀ {S₁ S₂ : R}, IsSumSq S₁ → IsSumSq S₂ → S₁ + S₂ = 0 → S₁ = 0 := by
   apply Iff.intro
-  case mp  => intros _ a S hS h_zero; sorry
+  case mp  => sorry
   case mpr => intro inductive_fact; constructor; intro α I x i hx hi; sorry
 
-instance [MulZeroOneClass R] [Add R] [Nontrivial R] [IsFormallyReal R] :
+instance [NonAssocSemiring R] [Nontrivial R] [IsFormallyReal R] :
     IsSemireal R where
   add_one_ne_zero_of_isSumSq a ssa amo :=
-    one_ne_zero' R (not_nontrivial_isSumSq_eq_zero 1 a ssa (by simpa using amo))
+    one_ne_zero' R (eq_zero_of_sum_of_squares_eq_zero 1 a ssa (by simpa using amo))
 
 instance [LinearOrderedRing R] : IsFormallyReal R where
   not_nontrivial_isSumSq_eq_zero a _ hS is_zero :=
