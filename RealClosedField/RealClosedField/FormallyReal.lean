@@ -4,10 +4,19 @@ import Mathlib.Data.Matrix.Notation
 
 variable (R : Type*)
 
-class IsFormallyReal [Add R] [Mul R] [Zero R] : Prop where
-  not_nontrivial_isSumSq_eq_zero (a S : R) (hS : IsSumSq S) (is_zero : a * a + S = 0) : a = 0
+class IsFormallyReal [AddCommMonoid R] [Mul R] : Prop where
+  eq_zero_of_sum_of_squares_eq_zero {α : Type} {I : Finset α} {x : α → R} {i : α}
+    (hx : ∑ i ∈ I, x i * x i = 0) (hi : i ∈ I) : x i = 0
 
-export IsFormallyReal (not_nontrivial_isSumSq_eq_zero)
+export IsFormallyReal (eq_zero_of_sum_of_squares_eq_zero)
+
+variable {R} in
+theorem IsFormallyReal.equiv_def_inductive [NonUnitalNonAssocSemiring R] :
+  IsFormallyReal R ↔
+  ∀ (a S : R) (hS : IsSumSq S) (h_zero : a * a + S = 0), a = 0 := by
+  apply Iff.intro
+  case mp  => intros _ a S hS h_zero; sorry
+  case mpr => intro inductive_fact; constructor; intro α I x i hx hi; sorry
 
 instance [MulZeroOneClass R] [Add R] [Nontrivial R] [IsFormallyReal R] :
     IsSemireal R where
