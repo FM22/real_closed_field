@@ -116,26 +116,24 @@ sums of squares in `R`.
 
 /-- A term of `R` satisfying `IsSumSq` can be written as `∑ i ∈ I, x i * x i`. -/
 theorem exists_sum_of_isSumSq [AddCommMonoid R] [Mul R] {a : R} (ha : IsSumSq a) :
-    (∃ (n : ℕ) (x : Fin n → R), a = ∑ i : Fin n, x i * x i) := by
+    (∃ (ι : Type) (I : Finset ι) (x : ι → R), a = ∑ i ∈ I, x i * x i) := by
   obtain ⟨_, I, _, y_cl, rfl⟩ :=
     AddSubmonoid.exists_finset_sum_of_mem_closure (s := {x : R | IsSquare x}) (by simpa)
   choose! x hx using y_cl
-  sorry
-  /- TODO: beef up library lemma -/
-  /- exact ⟨_, I, x, Finset.sum_equiv (by rfl) (by simp) hx⟩ -/
+  exact ⟨_, I, x, Finset.sum_equiv (by rfl) (by simp) hx⟩
 
 /-- Universe-polymorphic version of `exists_sum_of_isSumSq`. -/
 theorem exists_sum_of_isSumSq' [AddCommMonoid R] [Mul R] {a : R} (ha : IsSumSq a) :
     (∃ (ι : Type u) (I : Finset ι) (x : ι → R), a = ∑ i ∈ I, x i * x i) := by
-  obtain ⟨n, x, rfl⟩ := exists_sum_of_isSumSq ha
-  exact ⟨ULift.{u} (Fin n), Finset.univ, x ∘ (Equiv.ulift.toEmbedding),
-    by simpa using (Equiv.sum_comp Equiv.ulift _).symm⟩
+  obtain ⟨ι, I, x, _⟩ := exists_sum_of_isSumSq ha
+  exact ⟨ULift.{u} ι, .map (Equiv.ulift.symm.toEmbedding) I, x ∘ (Equiv.ulift.toEmbedding),
+    by simpa⟩
 
 /-- A term of `R` satisfies `IsSumSq` if and only if it can be written as `∑ i ∈ I, x i * x i`. -/
 theorem isSumSq_iff_exists_sum [AddCommMonoid R] [Mul R] (a : R) :
     IsSumSq a ↔
-    (∃ (ι : Type) (I : Finset ι) (x : ι → R), a = ∑ i ∈ I, x i * x i) := by sorry
-  /- refine ⟨exists_sum_of_isSumSq, by rintro ⟨_, _, _, rfl⟩; exact IsSumSq.sum_mul_self⟩ -/
+    (∃ (ι : Type) (I : Finset ι) (x : ι → R), a = ∑ i ∈ I, x i * x i) := by
+  refine ⟨exists_sum_of_isSumSq, by rintro ⟨_, _, _, rfl⟩; exact IsSumSq.sum_mul_self⟩
 
 /-- In a (not necessarily unital) commutative semiring,
 if `S1` and `S2` are sums of squares, then `S1 * S2` is a sum of squares. -/
@@ -179,8 +177,8 @@ sums of squares in `R`.
 @[simp] theorem Subsemiring.closure_isSquare [CommSemiring R] :
     closure {x : R | IsSquare x} = sumSqIn R := by
   refine closure_eq_of_le (fun x hx => IsSquare.isSumSq hx) (fun x hx ↦ ?_)
-  obtain ⟨ι, I, y, rfl⟩ := exists_sum_of_isSumSq (by simpa using hx)
-  simpa using sum_mem (fun i _ => by apply subset_closure; simp)
+  obtain ⟨ι, I, y, hy⟩ := exists_sum_of_isSumSq (by simpa using hx)
+  simpa [hy] using sum_mem (fun i _ => by apply subset_closure; simp)
 
 /--
 Let `R` be a linearly ordered semiring in which the property `a ≤ b → ∃ c, a + c = b` holds
@@ -189,7 +187,7 @@ Let `R` be a linearly ordered semiring in which the property `a ≤ b → ∃ c,
 -/
 theorem IsSumSq.nonneg {R : Type*} [LinearOrderedSemiring R] [ExistsAddOfLE R] {S : R}
     (pS : IsSumSq S) : 0 ≤ S := by
-  obtain ⟨_, x, rfl⟩ := exists_sum_of_isSumSq pS
+  obtain ⟨ι, I, x, rfl⟩ := exists_sum_of_isSumSq pS
   exact Finset.sum_nonneg (fun i _ => mul_self_nonneg <| x i)
 
 @[deprecated (since := "2024-08-09")] alias isSumSq.nonneg := IsSumSq.nonneg
