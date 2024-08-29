@@ -13,15 +13,15 @@ export IsFormallyReal (eq_zero_of_sum_of_squares_eq_zero)
 variable {R} in
 theorem IsFormallyReal.equiv_def_inductive [NonUnitalNonAssocSemiring R] :
   IsFormallyReal R ↔
-  ∀ {a : R}, a * a = 0 → a  = 0 ∧
-  ∀ {S₁ S₂ : R}, IsSumSq S₁ → IsSumSq S₂ → S₁ + S₂ = 0 → S₁ = 0 := by
+  ∀ (a S : R) (hS : IsSumSq S) (h_zero : a * a + S = 0), a = 0 := by
   apply Iff.intro
-  case mp  => sorry
+  case mp  => intros _ a S hS h_zero; sorry
   case mpr => intro inductive_fact; constructor; intro α I x i hx hi; sorry
 
 instance [NonAssocSemiring R] [Nontrivial R] [IsFormallyReal R] :
     IsSemireal R where
-  add_one_ne_zero_of_isSumSq a ssa amo :=
+  add_one_ne_zero_of_isSumSq a ssa amo := by
+
     one_ne_zero' R (eq_zero_of_sum_of_squares_eq_zero 1 a ssa (by simpa using amo))
 
 instance [LinearOrderedRing R] : IsFormallyReal R where
@@ -62,7 +62,7 @@ theorem IsFormallyReal.equiv_def_finsum [NonUnitalNonAssocSemiring R] :
   case mp  => intros formReal S sum_eq_zero x x_mem_S; sorry
   case mpr => intro no_nontrivial_sum_squares; constructor; intro a S hS sum_zero; sorry
 
-namespace RingConeWithSquares
+namespace RingCone
 variable {T : Type*} [CommRing T] [IsFormallyReal T] {a : T}
 
 variable (T) in
@@ -70,9 +70,8 @@ variable (T) in
 In a commutative semiring `R`, the type `Subsemiring.sumSqIn R`
 is the subsemiring of sums of squares in `R`.
 -/
-def sumSqIn : RingConeWithSquares T where
+def sumSqIn : RingCone T where
   __ := Subsemiring.sumSqIn T
-  square_mem' x := IsSumSq.mul_self x
   eq_zero_of_mem_of_neg_mem' {x} hx hnx :=
     IsFormallyReal.no_nontrivial_add_isSumSq_eq_zero hx hnx (add_neg_cancel x)
 
@@ -80,4 +79,7 @@ def sumSqIn : RingConeWithSquares T where
 @[simp] lemma mem_sumSqIn : a ∈ sumSqIn T ↔ IsSumSq a := Iff.rfl
 @[simp, norm_cast] lemma coe_sumSqIn : sumSqIn T = {x : T | IsSumSq x} := rfl
 
-end RingConeWithSquares
+instance sumSqIn.hasSquares : HasSquaresCone (sumSqIn T) where
+  square_mem _ : by simp
+
+end RingCone
