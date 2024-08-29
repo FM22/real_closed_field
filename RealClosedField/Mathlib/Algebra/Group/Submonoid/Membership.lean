@@ -6,7 +6,7 @@ import Mathlib.Algebra.Group.Submonoid.Membership
 import Mathlib.Data.Fintype.Option
 import Mathlib.Data.Fintype.BigOperators
 
-open Submonoid /-- context -/
+namespace Submonoid
 
 @[to_additive]
 theorem exists_finset_prod_of_mem_closure {M : Type*} [CommMonoid M] {s : Set M} {x : M}

@@ -1,6 +1,6 @@
 import RealClosedField.Mathlib.Algebra.Order.Ring.Cone
 import RealClosedField.Mathlib.Algebra.Ring.Semireal.Defs
-import Mathlib.Data.Matrix.Notation
+import Mathlib.Data.Fin.VecNotation
 
 variable (R : Type*)
 
@@ -20,9 +20,13 @@ theorem IsFormallyReal.equiv_def_inductive [NonUnitalNonAssocSemiring R] :
 
 instance [NonAssocSemiring R] [Nontrivial R] [IsFormallyReal R] :
     IsSemireal R where
-  add_one_ne_zero_of_isSumSq a ssa amo := by
-
-    one_ne_zero' R (eq_zero_of_sum_of_squares_eq_zero 1 a ssa (by simpa using amo))
+  add_one_ne_zero_of_isSumSq a ha := by
+    obtain ⟨n, x, rfl⟩ := exists_sum_of_isSumSq ha
+    intro h_contr
+    let y := Matrix.vecCons 1 x
+    have : ∑ i : Fin (n + 1), (Matrix.vecCons 1 x) i * (Matrix.vecCons 1 x) i = 1 + ∑ i : Fin n, x i * x i :=
+      by simp
+    exact one_ne_zero' R (eq_zero_of_sum_of_squares_eq_zero 1 a ssa (by simpa using amo))
 
 instance [LinearOrderedRing R] : IsFormallyReal R where
   not_nontrivial_isSumSq_eq_zero a _ hS is_zero :=

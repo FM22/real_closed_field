@@ -1,5 +1,5 @@
 /-
-paste into corresponding file
+Add this lemma to <filepath>
 -/
 import Mathlib.Algebra.Order.Ring.Basic
 
