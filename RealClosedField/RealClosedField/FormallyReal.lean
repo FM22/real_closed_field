@@ -4,32 +4,21 @@ import Mathlib.Data.Fin.VecNotation
 import Mathlib.Data.Finset.Basic
 
 class IsFormallyReal (R : Type*) [AddCommMonoid R] [Mul R] : Prop where
-  eq_zero_of_multiset_sum_of_squares_eq_zero {m : Multiset R} : (m.map fun x => x * x).sum = 0 → m ⊆ {0}
+  eq_zero_of_sum_of_squares_eq_zero {ι : Type} {I : Finset ι} {x : ι → R} {i : ι}
+    (hx : ∑ i ∈ I, x i * x i = 0) (hi : i ∈ I) : x i = 0
 
-theorem eq_zero_of_sum_of_squares_eq_zero {R : Type*} [AddCommMonoid R] [Mul R] [IsFormallyReal R]
-    {ι : Type*} {I : Finset ι} {x : ι → R} {i : ι}
-    (hx : ∑ i ∈ I, x i * x i = 0) (hi : i ∈ I) : x i = 0 :=
-  by simpa using IsFormallyReal.eq_zero_of_multiset_sum_of_squares_eq_zero (m := I.val.map x) (by simpa) (by simpa using ⟨i, by simpa⟩)
+export IsFormallyReal (eq_zero_of_sum_of_squares_eq_zero)
 
-open Classical in
-theorem IsFormallyReal.of_eq_zero_of_sum_of_squares_eq_zero (R : Type*) [AddCommMonoid R] [Mul R]
-    (h : ∀ {ι : Type} {I : Finset ι} {x : ι → R} {i : ι} (hx : ∑ i ∈ I, x i * x i = 0) (hi : i ∈ I), x i = 0) : IsFormallyReal R where
-  eq_zero_of_multiset_sum_of_squares_eq_zero {m} := by
-    intro hm v hv
-    have := h (ι := ℕ) (I := Finset.range (Multiset.card m)) (x := (m.toList.getD · 0)) (i := List.findIdx (· = v) m.toList)
-    sorry
-  /- TODO : maybe change definition to use lists instead of multisets to avoid "choice" issue? -/
-  /- TODO : maybe write inductive construction of indexing function from finset for arbitrary multiset? -/
+/- Universe polymorphic version of `IsFormallyReal.eq_zero_of_sum_of_squares_eq_zero` -/
+theorem IsFormallyReal.eq_zero_of_sum_of_squares_eq_zero'_poly' {R : Type*}
+    [AddCommMonoid R] [Mul R] [IsFormallyReal R] {ι : Type*} {I : Finset ι} {x : ι → R} {i : ι}
+    (hx : ∑ i ∈ I, x i * x i = 0) (hi : i ∈ I) : x i = 0 := by sorry
+  /- TODO : reflect down into Fin -/
 
-theorem isFormallyReal_iff_eq_zero_of_sum_of_squares_eq_zero {R : Type*} [AddCommMonoid R] [Mul R] :
-  IsFormallyReal R ↔
-    (∀ {ι : Type} {I : Finset ι} {x : ι → R} {i : ι} (hx : ∑ i ∈ I, x i * x i = 0) (hi : i ∈ I), x i = 0) :=
-  ⟨fun _ => eq_zero_of_sum_of_squares_eq_zero, IsFormallyReal.of_eq_zero_of_sum_of_squares_eq_zero _⟩
-
-theorem eq_zero_of_square_eq_zero {R : Type*} [AddCommMonoid R] [Mul R] [IsFormallyReal R] {a : R} {h : a * a = 0} : a = 0 := by
+theorem IsFormallyReal.eq_zero_of_square_eq_zero {R : Type*} [AddCommMonoid R] [Mul R] [IsFormallyReal R] {a : R} {h : a * a = 0} : a = 0 := by
   exact eq_zero_of_sum_of_squares_eq_zero (by simpa : ∑ i : Option Empty, a * a = 0) (i := default) (by simp)
 
-theorem eq_zero_of_isSumSq_of_sum_eq_zero {R : Type*} [NonUnitalNonAssocSemiring R] [IsFormallyReal R] {S₁ S₂ : R}
+theorem IsFormallyReal.eq_zero_of_isSumSq_of_sum_eq_zero {R : Type*} [NonUnitalNonAssocSemiring R] [IsFormallyReal R] {S₁ S₂ : R}
     (hS₁ : IsSumSq S₁) (hS₂ : IsSumSq S₂) (h : S₁ + S₂ = 0) : S₁ = 0 := by
   rw [isSumSq_iff_exists_sum] at *
   obtain ⟨ι, I, x, h1⟩ := hS₁; obtain ⟨β, J, y, h2⟩ := hS₂
@@ -40,11 +29,10 @@ theorem eq_zero_of_isSumSq_of_sum_eq_zero {R : Type*} [NonUnitalNonAssocSemiring
 
 open Classical in
 theorem IsFormallyReal.of_eq_zero_of_square_and_eq_zero_of_sum (R : Type*) [AddCommMonoid R] [Mul R]
-    (hz : ∀ {a : R}, a * a = 0 → a = 0) (hs : ∀ {S₁ S₂ : R}, IsSumSq S₁ → IsSumSq S₂ → S₁ + S₂ = 0 → S₁ = 0) : IsFormallyReal R := by
-  rw [isFormallyReal_iff_eq_zero_of_sum_of_squares_eq_zero]
-  intros ι I x i hx hi
-  have : ∑ j ∈ I \ {i}, x j * x j + x i * x i = 0 := by simpa [hx] using Finset.sum_sdiff (by simpa : {i} ⊆ I) (f := (fun j => x j * x j))
-  exact hz (by simpa [hs (S₁ := ∑ j ∈ I \ {i}, x j * x j) (S₂ := x i * x i) (by simp) (by simp) this] using this)
+    (hz : ∀ {a : R}, a * a = 0 → a = 0) (hs : ∀ {S₁ S₂ : R}, IsSumSq S₁ → IsSumSq S₂ → S₁ + S₂ = 0 → S₁ = 0) : IsFormallyReal R where
+  eq_zero_of_sum_of_squares_eq_zero {_} {I} {x} {i} hx hi :=
+    hz (hs (S₂ := ∑ j ∈ I.erase i, x j * x j) (by simp) (by simp)
+      (by simpa [hx] using Finset.add_sum_erase _ (fun j => x j * x j) hi))
 
 instance [NonAssocSemiring R] [Nontrivial R] [IsFormallyReal R] : IsSemireal R where
   add_one_ne_zero_of_isSumSq a ha := by
@@ -53,11 +41,10 @@ instance [NonAssocSemiring R] [Nontrivial R] [IsFormallyReal R] : IsSemireal R w
     intro h_contr; simpa using eq_zero_of_sum_of_squares_eq_zero h_contr (by simp : none ∈ _)
   /- TODO : try out deducing this from previous two lemmas -/
 
-instance [LinearOrderedRing R] : IsFormallyReal R := by
-  rw [isFormallyReal_iff_eq_zero_of_sum_of_squares_eq_zero];
-  intros ι I x i hx hi
-  sorry
-  /- TODO: should be similar to eq_zero_of_isSumSq_of_sum_eq_zero -/
+instance [LinearOrderedRing R] : IsFormallyReal R where
+  eq_zero_of_sum_of_squares_eq_zero {ι} {I} {x} {i} hx hi := by
+    sorry
+    /- TODO: should be similar to eq_zero_of_isSumSq_of_sum_eq_zero -/
 
   /- OLD PROOF: -/
   /- mul_self_eq_zero.mp (le_antisymm
