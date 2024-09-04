@@ -1,7 +1,5 @@
 import RealClosedField.Mathlib.Algebra.Order.Ring.Cone
 import RealClosedField.Mathlib.Algebra.Ring.Semireal.Defs
-import Mathlib.Data.Fin.VecNotation
-import Mathlib.Data.Finset.Basic
 
 class IsFormallyReal (R : Type*) [AddCommMonoid R] [Mul R] : Prop where
   eq_zero_of_sum_of_squares_eq_zero {ι : Type} {I : Finset ι} {x : ι → R} {i : ι}
