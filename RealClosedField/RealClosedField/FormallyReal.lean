@@ -8,7 +8,7 @@ class IsFormallyReal (R : Type*) [AddCommMonoid R] [Mul R] : Prop where
 export IsFormallyReal (eq_zero_of_sum_of_squares_eq_zero)
 
 /- Universe polymorphic version of `IsFormallyReal.eq_zero_of_sum_of_squares_eq_zero` -/
-theorem IsFormallyReal.eq_zero_of_sum_of_squares_eq_zero'_poly' {R : Type*}
+theorem IsFormallyReal.eq_zero_of_sum_of_squares_eq_zero' {R : Type*}
     [AddCommMonoid R] [Mul R] [IsFormallyReal R] {ι : Type*} {I : Finset ι} {x : ι → R} {i : ι}
     (hx : ∑ i ∈ I, x i * x i = 0) (hi : i ∈ I) : x i = 0 := by
   let xsq := (fun i => x i * x i)
@@ -33,6 +33,11 @@ theorem IsFormallyReal.eq_zero_of_isSumSq_of_sum_eq_zero {R : Type*}
   have : ∑ i ∈ I.disjSum J, Sum.elim x y i * Sum.elim x y i = 0 := by simpa
   exact fun i _ => eq_zero_of_sum_of_squares_eq_zero this (i := Sum.inl i) (by simpa)
 
+theorem IsFormallyReal.eq_zero_of_isSumSq_of_sum_eq_zero' {R : Type*}
+    [NonUnitalNonAssocSemiring R] [IsFormallyReal R] {S₁ S₂ : R}
+    (hS₁ : IsSumSq S₁) (hS₂ : IsSumSq S₂) (h : S₁ + S₂ = 0): S₂ = 0 := by
+  simp_all [eq_zero_of_isSumSq_of_sum_eq_zero hS₁ hS₂ h]
+
 open Classical in
 theorem IsFormallyReal.of_eq_zero_of_square_and_eq_zero_of_sum (R : Type*) [AddCommMonoid R] [Mul R]
     (hz : ∀ {a : R}, a * a = 0 → a = 0)
@@ -42,8 +47,8 @@ theorem IsFormallyReal.of_eq_zero_of_square_and_eq_zero_of_sum (R : Type*) [AddC
         (by simpa [hx] using Finset.add_sum_erase _ (fun j => x j * x j) hi))
 
 instance [NonAssocSemiring R] [Nontrivial R] [IsFormallyReal R] : IsSemireal R where
-  add_one_ne_zero_of_isSumSq a ha h_contr := by
-    simpa using IsFormallyReal.eq_zero_of_isSumSq_of_sum_eq_zero (by simp) ha h_contr
+  add_one_ne_zero_of_isSumSq S hS h_contr := by
+    simpa using IsFormallyReal.eq_zero_of_isSumSq_of_sum_eq_zero (by simp) hS h_contr
 
 open Classical in
 instance [LinearOrderedRing R] : IsFormallyReal R where
