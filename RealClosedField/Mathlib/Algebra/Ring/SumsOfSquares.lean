@@ -82,9 +82,9 @@ end AddSubmonoid
 
 /-- In an additive, commutative monoid with multiplication, a finite sum of sums of squares
 is a sum of squares. -/
-theorem IsSumSq.sum [AddCommMonoid R] [Mul R] {ι : Type*} {I : Finset ι} {f : ι → R}
-    (hf : ∀ i ∈ I, IsSumSq <| f i) : IsSumSq (∑ i ∈ I, f i) := by
-  simpa using sum_mem (S := AddSubmonoid.sumSqIn R) hf
+theorem IsSumSq.sum [AddCommMonoid R] [Mul R] {ι : Type*} {I : Finset ι} {S : ι → R}
+    (hS : ∀ i ∈ I, IsSumSq <| S i) : IsSumSq (∑ i ∈ I, S i) := by
+  simpa using sum_mem (S := AddSubmonoid.sumSqIn R) hS
 
 /-- In an additive unital magma with multiplication, `x * x` is a sum of squares for all `x`. -/
 theorem IsSumSq.mul_self [AddZeroClass R] [Mul R] (a : R) : IsSumSq (a * a) := by
