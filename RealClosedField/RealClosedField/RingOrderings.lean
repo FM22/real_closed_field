@@ -7,10 +7,31 @@ Authors: Florent Schaffhauser, Artie Khovanov
 import Mathlib.Algebra.Ring.Defs
 import Mathlib.Tactic.Ring
 import Mathlib.Tactic.FieldSimp
+import Mathlib.Algebra.Ring.Subsemiring.Order
 
 open Set
 
+variable (S R : Type*) [Ring R] [SetLike S R]
 
+class RingOrderingClass extends SubsemiringClass S R : Prop where
+  square_mem {P : S} {x : R} : x * x ∈ P
+  minus_one_not_mem {P : S} : -1 ∉ P
+
+structure RingOrdering extends Subsemiring R where
+  square_mem' {x : R} : x * x ∈ carrier
+  minus_one_not_mem' : -1 ∉ carrier
+
+instance RingOrdering.instSetLike : SetLike (RingOrdering R) R where
+  coe P := P.carrier
+  coe_injective' p q h := by cases p; cases q; congr; exact SetLike.ext' h
+
+instance RingOrdering.instRingOrderingClass : RingOrderingClass (RingOrdering R) R where
+  zero_mem {C} := C.zero_mem'
+  one_mem {C} := C.one_mem'
+  add_mem {C} := C.add_mem'
+  mul_mem {C} := C.mul_mem'
+  square_mem {C} := C.square_mem'
+  minus_one_not_mem {C} := C.minus_one_not_mem'
 
 /--
 Given a set `P : Set R` in a ring `R`, the property of being a precone is defined as
