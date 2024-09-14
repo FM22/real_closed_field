@@ -33,6 +33,8 @@ instance RingOrdering.instRingOrderingClass : RingOrderingClass (RingOrdering R)
   square_mem {C} := C.square_mem'
   minus_one_not_mem {C} := C.minus_one_not_mem'
 
+/- TODO: contruct precone from only add, mul, sq, minus axioms -/
+
 /--
 Given a set `P : Set R` in a ring `R`, the property of being a precone is defined as
 a `Prop`-valued structure with four fields: stability of `P` under addition and multiplication,
