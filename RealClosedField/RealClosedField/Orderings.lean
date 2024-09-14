@@ -8,12 +8,14 @@ import Mathlib.Algebra.Ring.Defs
 import Mathlib.Tactic.Ring
 import Mathlib.Tactic.FieldSimp
 
-set_option linter.longLine false
-
 open Set
 
+
+
 /--
-Given a set `P : Set R` in a ring `R`, the property of being a precone is defined as a `Prop`-valued structure with four fields: stability of `P` under addition and multiplication, the fact that `P` contains all squares, and the fact that `(-1 : R) ∉ P`.
+Given a set `P : Set R` in a ring `R`, the property of being a precone is defined as
+a `Prop`-valued structure with four fields: stability of `P` under addition and multiplication,
+the fact that `P` contains all squares, and the fact that `(-1 : R) ∉ P`.
 -/
 @[mk_iff]
 structure Set.isPrecone.{k} {R : Type k} [Ring R] (P : Set R) : Prop :=

@@ -1,4 +1,4 @@
-import RealClosedField.Mathlib.Algebra.Order.Ring.Cone
+import Mathlib.Algebra.Order.Ring.Cone
 import RealClosedField.Mathlib.Algebra.Ring.Semireal.Defs
 
 class IsFormallyReal (R : Type*) [AddCommMonoid R] [Mul R] : Prop where
@@ -75,6 +75,7 @@ def sumSqIn : RingCone T where
 @[simp] lemma mem_sumSqIn : a ∈ sumSqIn T ↔ IsSumSq a := Iff.rfl
 @[simp, norm_cast] lemma coe_sumSqIn : sumSqIn T = {x : T | IsSumSq x} := rfl
 
+/- TODO: rewrite this bit to use orderings -/
 instance sumSqIn.hasSquares : HasSquaresCone (sumSqIn T) where
   square_mem _ := by simp
 
