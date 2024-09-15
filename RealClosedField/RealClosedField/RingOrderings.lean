@@ -105,6 +105,8 @@ In order to prove that `P[a]` is a precone, the remaining property to show is th
 Assume that `-1 ∈ P[a]`. Then `-1 = x + a * y` for some `x, y ∈ P`. If `y = 0`, then `-1 = x ∈ P`, which implies `False` because `P` is precone. So we have proven that `y ≠ 0` and we can write ` -a = x * y * (1 / y) ^ 2 + y * (1 / y) ^ 2`. Since `P` is precone, it contains all the squares in `R`. And since `P` contains `x` and `y` and is stable under addition and multiplication, it contains `-a`. But by assumption `-a ∈ P → False`, so we have proven `False`. Note that the proof is constructive.
 -/
 
+/- TODO : abstract out closure under inverses -/
+
 lemma minus_one_not_mem_closure_insert_ringOrdering
     {S F : Type*} [Field F] [SetLike S F] [RingOrderingClass S F] (P : S)
     (a : F) (ha : -a ∉ P) :
