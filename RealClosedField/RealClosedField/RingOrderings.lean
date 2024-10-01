@@ -8,9 +8,6 @@ import Mathlib.Algebra.Ring.Defs
 import Mathlib.Tactic.Ring
 import Mathlib.Tactic.FieldSimp
 import Mathlib.Algebra.Ring.Subsemiring.Order
-import Mathlib.Order.Atoms
-
-/- TODO: automate closure operations -/
 
 /-
 ## Definitions
