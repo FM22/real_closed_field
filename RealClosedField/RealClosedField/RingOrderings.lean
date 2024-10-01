@@ -176,6 +176,9 @@ Introduce the notation `P[a]` for `RingPreordering.adjoin a P`.
 -/
 notation:max P"["a"]" => RingPreordering.adjoin a P
 
+theorem RingPreordering.toOrdering_of_maximal (S : Type*) [SetLike S F] [RingPreorderingClass S F]
+  (P : S) (h : Maximal /- todo : toPreordering -/ (P : Set F))
+
 /- TODO : apply Zorn here -/
 
 theorem RingPreordering.exists_le_maximal : ∃ O : RingOrdering F, P ≤ (O : Set F) := sorry
