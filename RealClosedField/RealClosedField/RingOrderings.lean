@@ -144,12 +144,11 @@ theorem RingPreordering.minus_one_not_mem_adjoin_linear
   intro hz
   apply ha
   have : y ≠ 0 := fun h => by simpa [*] using minus_one_not_mem P
-  have : -a = x * y⁻¹ + y⁻¹ := by
+  rw [show -a = x * y⁻¹ + y⁻¹ by
     field_simp
     rw [neg_eq_iff_eq_neg.mp hz]
-    ring
-  rw [this]
-  aesop (config := { enableSimp := false })
+    ring]
+  aesop
 
 /-
 If `F` is a field, `P` is a preordering on `F`, and `a` in `F` is such that `-a ∉ P`,
