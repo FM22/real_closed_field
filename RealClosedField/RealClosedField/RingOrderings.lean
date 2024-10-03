@@ -225,6 +225,8 @@ theorem RingPreordering.exists_le_maximal : ∃ O : RingOrdering F, (P : Set F) 
 
 end adjoin_field
 
+/- maybe have the below in a new file? or in the formally real file? need to think about dependencies -/
+
 /- semireal ring : sums of squares form a RingPreordering -/
 
 /- formally real field : RingOrdering exists -/
