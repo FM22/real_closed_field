@@ -43,12 +43,12 @@ theorem IsFormallyReal.of_eq_zero_of_square_and_eq_zero_of_sum (R : Type*) [AddC
     (hz : ∀ {a : R}, a * a = 0 → a = 0)
     (hs : ∀ {S₁ S₂ : R}, IsSumSq S₁ → IsSumSq S₂ → S₁ + S₂ = 0 → S₁ = 0) : IsFormallyReal R where
   eq_zero_of_sum_of_squares_eq_zero {_} {I} {x} {i} hx hi :=
-    hz (hs (S₂ := ∑ j ∈ I.erase i, x j * x j) (by simp) (by simp)
+    hz (hs (S₂ := ∑ j ∈ I.erase i, x j * x j) (by aesop) (by aesop)
         (by simpa [hx] using Finset.add_sum_erase _ (fun j => x j * x j) hi))
 
 instance [NonAssocSemiring R] [Nontrivial R] [IsFormallyReal R] : IsSemireal R where
-  add_one_ne_zero_of_isSumSq S hS h_contr := by
-    simpa using IsFormallyReal.eq_zero_of_isSumSq_of_sum_eq_zero (by simp) hS h_contr
+  add_one_ne_zero_of_isSumSq hS h_contr := by
+    simpa using IsFormallyReal.eq_zero_of_isSumSq_of_sum_eq_zero (by aesop) hS h_contr
 
 open Classical in
 instance [LinearOrderedRing R] : IsFormallyReal R where
@@ -63,7 +63,7 @@ variable {T : Type*} [CommRing T] [IsFormallyReal T] {a : T}
 
 variable (T) in
 /--
-In a commutative semiring `R`, the type `Subsemiring.sumSqIn R`
+In a formally real commutative ring `R`, the type `Subsemiring.sumSqIn R`
 is the subsemiring of sums of squares in `R`.
 -/
 def sumSqIn : RingCone T where
@@ -74,9 +74,5 @@ def sumSqIn : RingCone T where
 @[simp] lemma sumSqIn_toSubsemiring : (sumSqIn T).toSubsemiring = .sumSqIn T := rfl
 @[simp] lemma mem_sumSqIn : a ∈ sumSqIn T ↔ IsSumSq a := Iff.rfl
 @[simp, norm_cast] lemma coe_sumSqIn : sumSqIn T = {x : T | IsSumSq x} := rfl
-
-/- TODO: rewrite this bit to use orderings -/
-instance sumSqIn.hasSquares : HasSquaresCone (sumSqIn T) where
-  square_mem _ := by simp
 
 end RingCone

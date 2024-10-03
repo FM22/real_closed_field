@@ -54,7 +54,8 @@ theorem IsSumSq.induction_alt [Mul R] [Add R] [Zero R]
 
 /-- In an additive monoid with multiplication,
 if `S1` and `S2` are sums of squares, then `S1 + S2` is a sum of squares. -/
-@[simp] theorem IsSumSq.add [AddMonoid R] [Mul R] {S1 S2 : R}
+@[aesop safe apply]
+theorem IsSumSq.add [AddMonoid R] [Mul R] {S1 S2 : R}
     (h1 : IsSumSq S1) (h2 : IsSumSq S2) : IsSumSq (S1 + S2) := by
   induction h1 with
   | zero        => simp [zero_add, h2]
@@ -93,7 +94,8 @@ theorem IsSumSq.mul_self [AddZeroClass R] [Mul R] (a : R) : IsSumSq (a * a) := b
 /-- In an additive unital magma with multiplication `R`, squares in `R` are sums of squares.
 By definition, a square in `R` is a term `x : R` such that `x = y * y` for some `y : R`
 and in Mathlib this is known as `IsSquare R` (see Mathlib.Algebra.Group.Even). -/
-@[simp] theorem IsSquare.isSumSq [AddZeroClass R] [Mul R] {x : R} (hx : IsSquare x) :
+@[aesop unsafe apply]
+theorem IsSquare.isSumSq [AddZeroClass R] [Mul R] {x : R} (hx : IsSquare x) :
     IsSumSq x := by obtain ⟨_, rfl⟩ := hx; exact IsSumSq.mul_self _
 
 /--
@@ -110,9 +112,10 @@ sums of squares in `R`.
 @[deprecated (since := "2024-08-09")] alias SquaresAddClosure := AddSubmonoid.closure_isSquare
 
 /-- A term of the form `∑ i ∈ I, x i * x i` satisfies `IsSumSq`. -/
-@[simp] theorem IsSumSq.sum_mul_self [AddCommMonoid R] [Mul R]
+@[aesop safe apply]
+theorem IsSumSq.sum_mul_self [AddCommMonoid R] [Mul R]
     {ι : Type*} {I : Finset ι} {x : ι → R} : IsSumSq (∑ i ∈ I, x i * x i) := by
-  simpa using sum_mem (S := AddSubmonoid.sumSqIn R) (by simp)
+  simpa using sum_mem (S := AddSubmonoid.sumSqIn R) (by aesop)
 
 /-- A term of `R` satisfying `IsSumSq` can be written as `∑ i ∈ I, x i * x i`. -/
 theorem exists_sum_of_isSumSq [AddCommMonoid R] [Mul R] {a : R} (ha : IsSumSq a) :
@@ -137,6 +140,7 @@ theorem isSumSq_iff_exists_sum [AddCommMonoid R] [Mul R] (a : R) :
 
 /-- In a (not necessarily unital) commutative semiring,
 if `S1` and `S2` are sums of squares, then `S1 * S2` is a sum of squares. -/
+@[aesop unsafe 50% apply]
 theorem IsSumSq.mul [NonUnitalCommSemiring R] {S1 S2 : R}
     (h1 : IsSumSq S1) (h2 : IsSumSq S2) : IsSumSq (S1 * S2) := by
   rw [isSumSq_iff_exists_sum] at *
