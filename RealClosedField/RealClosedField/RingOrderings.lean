@@ -175,7 +175,7 @@ theorem RingPreordering.minus_one_not_mem_adjoin_linear
     -1 ≠ x + a * y := by
   intro hz
   apply ha
-  have : y ≠ 0 := fun h => by simpa [*] using minus_one_not_mem P
+  have : y ≠ 0 := fun _ => by simpa [*] using minus_one_not_mem P
   rw [show -a = x * y⁻¹ + y⁻¹ by
     field_simp
     rw [neg_eq_iff_eq_neg.mp hz]
