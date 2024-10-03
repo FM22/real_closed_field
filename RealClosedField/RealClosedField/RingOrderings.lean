@@ -34,8 +34,6 @@ structure RingPreordering extends Subsemiring R where
   square_mem' (x : R) : x * x ∈ carrier
   minus_one_not_mem' : -1 ∉ carrier
 
-#check RingPreordering.toSubsemiring
-
 instance RingPreordering.instSetLike : SetLike (RingPreordering R) R where
   coe P := P.carrier
   coe_injective' p q h := by cases p; cases q; congr; exact SetLike.ext' h
@@ -116,14 +114,21 @@ theorem RingPreodering.nonempty_chain_bddAbove {R : Type*} [CommRing R]
     (c : Set (RingPreordering R)) (hcc : IsChain (· ≤ ·) c) (hc : c.Nonempty) :
     BddAbove c := by
   rw [bddAbove_def]
-  let Q := RingPreordering.mk
-    (sSup <| RingPreordering.toSubsemiring '' c)
+  let c' := RingPreordering.toSubsemiring '' c
+  have hc'c : IsChain (· ≤ ·) c' := IsChain.image _ _ RingPreordering.toSubsemiring (by aesop) hcc
+  let Q := RingPreordering.mk (sSup c')
     (fun x => by
-      have : RingPreordering.toSubsemiring hc.some ≤ (sSup (RingPreordering.toSubsemiring '' c)) :=
+      have : hc.some.toSubsemiring ≤ (sSup c') :=
         CompleteLattice.le_sSup _ _ (by aesop (add hc.some_mem unsafe))
       exact this (by simpa using (square_mem hc.some x)))
-    sorry /- TODO : use a different definition? -/
-  sorry
+    (by
+      have : ∀ x ∈ c', -1 ∉ x := fun _ hP' => by
+        obtain ⟨P, _, rfl⟩ := (Set.mem_image _ _ _).mp hP'
+        simpa using P.minus_one_not_mem'
+      simpa [Subsemiring.coe_sSup_of_directedOn (by simp [c', hc]) (IsChain.directedOn hc'c)])
+  refine ⟨Q, fun P _ => ?_⟩
+  have : P.toSubsemiring ≤ Q.toSubsemiring := CompleteLattice.le_sSup c' P.toSubsemiring (by aesop)
+  aesop
 
 /-
 ## Constructing larger orderings
@@ -214,7 +219,7 @@ def RingPreordering.toOrdering (P : RingPreordering F) (h : IsMax P) : RingOrder
       exact ⟨x, mem_adjoin P hx.2, hx.1⟩
     exact not_isMax_of_lt (by aesop) h
 
-theorem RingPreordering.exists_le_maximal : ∃ O : RingOrdering F, (P : Set F) ⊆ O := by
+theorem RingPreordering.exists_le_ordering : ∃ O : RingOrdering F, (P : Set F) ⊆ O := by
   suffices ∃ Q, RingPreorderingClass.toRingPreordering P ≤ Q ∧ Maximal (fun x ↦ x ∈ Set.univ) Q by
     obtain ⟨Q, hQl, hQm⟩ := this
     refine ⟨Q.toOrdering (by aesop), by aesop⟩
