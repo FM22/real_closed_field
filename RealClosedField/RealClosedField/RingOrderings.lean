@@ -123,6 +123,7 @@ theorem RingPreodering.nonempty_chain_bddAbove {R : Type*} [CommRing R]
         CompleteLattice.le_sSup _ _ (by aesop (add hc.some_mem unsafe))
       exact this (by simpa using (square_mem hc.some x)))
     sorry /- TODO : use a different definition? -/
+  sorry
 
 /-
 ## Constructing larger orderings
