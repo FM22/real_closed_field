@@ -111,8 +111,7 @@ theorem RingPreordering.inv_mem
   aesop
 
 theorem RingPreodering.nonempty_chain_bddAbove {R : Type*} [CommRing R]
-    (c : Set (RingPreordering R)) (hcc : IsChain (· ≤ ·) c) (hc : c.Nonempty) :
-    BddAbove c := by
+    (c : Set (RingPreordering R)) (hcc : IsChain (· ≤ ·) c) (hc : c.Nonempty) : BddAbove c := by
   rw [bddAbove_def]
   let c' := RingPreordering.toSubsemiring '' c
   have hc'c : IsChain (· ≤ ·) c' := IsChain.image _ _ RingPreordering.toSubsemiring (by aesop) hcc
@@ -120,7 +119,7 @@ theorem RingPreodering.nonempty_chain_bddAbove {R : Type*} [CommRing R]
     (fun x => by
       have : hc.some.toSubsemiring ≤ (sSup c') :=
         CompleteLattice.le_sSup _ _ (by aesop (add hc.some_mem unsafe))
-      exact this (by simpa using (square_mem hc.some x)))
+      exact this (by simpa using (hc.some.square_mem' x)))
     (by
       have : ∀ x ∈ c', -1 ∉ x := fun _ hP' => by
         obtain ⟨P, _, rfl⟩ := (Set.mem_image _ _ _).mp hP'
