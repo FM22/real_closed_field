@@ -1,5 +1,5 @@
 import Mathlib.Algebra.Order.Ring.Cone
-import RealClosedField.Mathlib.Algebra.Ring.Semireal.Defs
+import RealClosedField.Mathlib.Algebra.Ring.Semireal.Basic
 
 class IsFormallyReal (R : Type*) [AddCommMonoid R] [Mul R] : Prop where
   eq_zero_of_sum_of_squares_eq_zero {ι : Type} {I : Finset ι} {x : ι → R} {i : ι}
@@ -63,8 +63,8 @@ variable {T : Type*} [CommRing T] [IsFormallyReal T] {a : T}
 
 variable (T) in
 /--
-In a formally real commutative ring `R`, the type `Subsemiring.sumSqIn R`
-is the subsemiring of sums of squares in `R`.
+In a commutative formally real ring `R`, the type `Subsemiring.sumSqIn R`
+is the cone of sums of squares in `R`.
 -/
 def sumSqIn : RingCone T where
   __ := Subsemiring.sumSqIn T

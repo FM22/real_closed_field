@@ -53,8 +53,8 @@ variable {T : Type*} [CommRing T] [IsSemireal T] {a : T}
 
 variable (T) in
 /--
-In a commutative semiring `R`, the type `Subsemiring.sumSqIn R`
-is the subsemiring of sums of squares in `R`.
+In a commutative semireal ring `R`, the type `Subsemiring.sumSqIn R`
+is the preordering of sums of squares in `R`.
 -/
 def sumSqIn : RingPreordering T where
   __ := Subsemiring.sumSqIn T
