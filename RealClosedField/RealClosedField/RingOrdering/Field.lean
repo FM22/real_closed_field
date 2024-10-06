@@ -47,7 +47,7 @@ variable {S F : Type*} [Field F] [SetLike S F] [RingPreorderingClass S F] (P : S
 
 variable {P} in
 @[aesop safe apply (rule_sets := [SetLike])]
-theorem RingPreordering.inv_mem' {a : F} (ha : a ∈ P) : a⁻¹ ∈ P := by
+theorem RingPreordering.Field.inv_mem {a : F} (ha : a ∈ P) : a⁻¹ ∈ P := by
   rw [(by field_simp : a⁻¹ = a * (a⁻¹ * a⁻¹))]
   aesop
 

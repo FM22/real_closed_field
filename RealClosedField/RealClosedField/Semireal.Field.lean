@@ -3,7 +3,6 @@ Copyright (c) 2024 Artie Khovanov. All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Artie Khovanov
 -/
-
 import RealClosedField.RealClosedField.FormallyReal
 import RealClosedField.RealClosedField.RingOrdering.Field
 
