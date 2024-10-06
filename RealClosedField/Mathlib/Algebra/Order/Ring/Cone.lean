@@ -93,18 +93,25 @@ instance RingConeClass.instSetLike_of_isMaxCone {S R : Type*}
   coe_injective' p q h := by cases p; cases q; congr; exact SetLike.ext' h
 
 instance RingConeClass.instRingConeClass_of_isMaxCone {S R : Type*}
-    [CommRing R] [SetLike S R] [RingConeClass S R] : RingConeClass {x : S // IsMaxCone x} R
-  := sorry /- coe all the axioms -/
+    [CommRing R] [SetLike S R] [RingConeClass S R] : RingConeClass {x : S // IsMaxCone x} R where
+  add_mem := add_mem (S := S)
+  zero_mem {s} := zero_mem (s : S)
+  mul_mem := mul_mem (S := S)
+  one_mem {s} := one_mem (s : S)
+  eq_zero_of_mem_of_neg_mem := eq_zero_of_mem_of_neg_mem (S := S)
 
 open Classical in
+/-- A maximal cone over a commutative ring `R` is an ordering on `R`. -/
 instance RingConeClass.instRingOrderingClass_of_isMaxCone {S R : Type*} [Nontrivial R]
     [CommRing R] [SetLike S R] [RingConeClass S R] :
     RingOrderingClass {x : S // IsMaxCone x} (R := R) where
   __ := RingConeClass.toSubsemiringClass
   square_mem P x := by
-    cases @mem_or_neg_mem S R _ _ P P.2 x with
+    cases @mem_or_neg_mem S _ _ _ _ P.2 x with
     | inl hx  => aesop
     | inr hnx => have : -x * -x ∈ P := by aesop (config := { enableSimp := false })
-                 simpa using this
+                 simpa
   minus_one_not_mem P h := one_ne_zero <| eq_zero_of_mem_of_neg_mem (one_mem ↑P) h
-  mem_or_neg_mem P x := @mem_or_neg_mem S R _ _ P P.2 x
+  mem_or_neg_mem P x := @mem_or_neg_mem S _ _ _ _ P.2 x
+
+/- TODO : decide whether to keep this cursed subtype instance, or whether to change to a def. -/
