@@ -114,3 +114,5 @@ theorem RingPreordering.exists_le_ordering : ∃ O : RingOrdering F, (P : Set F)
   · simp
 
 end adjoin_field
+
+/- TODO : Generalise to prime orderings, rename file, then specialise back to fields -/
