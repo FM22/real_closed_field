@@ -6,19 +6,6 @@ Authors: Artie Khovanov
 import RealClosedField.RealClosedField.FormallyReal
 import RealClosedField.RealClosedField.RingOrdering.Field
 
-/-
-TODO: Over a [Field F]
-
-1. RingPreordering is RingCone
-2. RingOrdering is maximal RingCone
-3. IsSemireal F → IsFormallyReal F
-4. IsSemiReal F → construct LinearOrderedField
-5. ordering exists on F ↔ IsSemireal F
-
-TODO: think about how to maximise typeclass / instance use here
-
--/
-
 variable (F S : Type*) [Field F] [SetLike S F]
 
 instance RingPreorderingClass.instRingConeClass [RingPreorderingClass S F] : RingConeClass S F where
@@ -30,5 +17,22 @@ instance RingPreorderingClass.instRingConeClass [RingPreorderingClass S F] : Rin
 instance RingOrderingClass.instIsMaxCone [RingOrderingClass S F] (O : S) : IsMaxCone O where
   mem_or_neg_mem := mem_or_neg_mem O
 
-instance IsSemireal.instIsFormallyReal [IsSemireal F] : IsFormallyReal F := by
-  refine IsFormallyReal.of_eq_zero_of_square_and_eq_zero_of_sum ?_ ?_
+open Classical in
+instance IsSemireal.instIsFormallyReal [IsSemireal F] : IsFormallyReal F where
+  eq_zero_of_sum_of_squares_eq_zero {ι} {I} {x} {i} hx hi := by
+    by_contra
+    refine add_one_ne_zero_of_isSumSq (IsSumSq.mul (IsSumSq.sum_mul_self _) (IsSumSq.mul_self _))
+      (by field_simp [hx] : 1 + (∑ j ∈ I.erase i, x j * x j) * ((x i)⁻¹ * (x i)⁻¹) = 0)
+
+noncomputable def LinearOrderedField.mkOfIsSemireal [IsSemireal F] : LinearOrderedField F where
+  __ := LinearOrderedRing.mkOfCone
+          (Classical.choose <| RingPreordering.exists_le_ordering <| RingPreordering.sumSqIn F)
+          (Classical.decPred _)
+  __ := ‹Field F›
+
+theorem ArtinSchreier_basic :
+    Nonempty ({S : LinearOrderedField F // S.toField = ‹Field F›}) ↔ IsSemireal F := by
+  refine Iff.intro (fun h => ?_) (fun h => ?_)
+  · rcases Classical.choice h with ⟨inst, extend⟩
+    exact LinearOrderedSemiring.instIsSemireal F
+  · exact Nonempty.intro ⟨LinearOrderedField.mkOfIsSemireal F, by aesop⟩

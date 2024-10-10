@@ -114,7 +114,7 @@ sums of squares in `R`.
 /-- A term of the form `∑ i ∈ I, x i * x i` satisfies `IsSumSq`. -/
 @[aesop safe apply]
 theorem IsSumSq.sum_mul_self [AddCommMonoid R] [Mul R]
-    {ι : Type*} {I : Finset ι} {x : ι → R} : IsSumSq (∑ i ∈ I, x i * x i) := by
+    {ι : Type*} {I : Finset ι} (x : ι → R) : IsSumSq (∑ i ∈ I, x i * x i) := by
   simpa using sum_mem (S := AddSubmonoid.sumSqIn R) (by aesop)
 
 /-- A term of `R` satisfying `IsSumSq` can be written as `∑ i ∈ I, x i * x i`. -/
@@ -136,7 +136,7 @@ theorem exists_sum_of_isSumSq' [AddCommMonoid R] [Mul R] {a : R} (ha : IsSumSq a
 theorem isSumSq_iff_exists_sum [AddCommMonoid R] [Mul R] (a : R) :
     IsSumSq a ↔
     (∃ (ι : Type) (I : Finset ι) (x : ι → R), a = ∑ i ∈ I, x i * x i) := by
-  refine ⟨exists_sum_of_isSumSq, by rintro ⟨_, _, _, rfl⟩; exact IsSumSq.sum_mul_self⟩
+  refine ⟨exists_sum_of_isSumSq, by rintro ⟨_, _, _, rfl⟩; exact IsSumSq.sum_mul_self _⟩
 
 /-- In a (not necessarily unital) commutative semiring,
 if `S1` and `S2` are sums of squares, then `S1 * S2` is a sum of squares. -/

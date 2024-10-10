@@ -43,7 +43,8 @@ lemma IsSemireal.not_isSumSq_minus_one {R : Type*} [AddGroup R] [One R] [Mul R] 
     ¬ IsSumSq (-1 : R) := (by simpa using add_one_ne_zero_of_isSumSq ·)
 
 /-- Linearly ordered semirings in which the property `a ≤ b → ∃ c, a + c = b` holds are semireal. -/
-instance [LinearOrderedSemiring R] [ExistsAddOfLE R] : IsSemireal R where
+instance LinearOrderedSemiring.instIsSemireal [LinearOrderedSemiring R] [ExistsAddOfLE R] :
+    IsSemireal R where
   add_one_ne_zero_of_isSumSq ssa amo :=
     zero_ne_one' R (le_antisymm zero_le_one
       (le_of_le_of_eq (le_add_of_nonneg_right ssa.nonneg) amo))

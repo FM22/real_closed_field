@@ -51,12 +51,13 @@ theorem IsFormallyReal.of_eq_zero_of_square_and_eq_zero_of_sum (R : Type*) [AddC
     hz (hs (S₂ := ∑ j ∈ I.erase i, x j * x j) (by aesop) (by aesop)
         (by simpa [hx] using Finset.add_sum_erase _ (fun j => x j * x j) hi))
 
-instance [NonAssocSemiring R] [Nontrivial R] [IsFormallyReal R] : IsSemireal R where
+instance IsFormallyReal.instIsSemireal [NonAssocSemiring R] [Nontrivial R] [IsFormallyReal R] :
+    IsSemireal R where
   add_one_ne_zero_of_isSumSq hS h_contr := by
     simpa using IsFormallyReal.eq_zero_of_isSumSq_of_sum_eq_zero (by aesop) hS h_contr
 
 open Classical in
-instance [LinearOrderedRing R] : IsFormallyReal R where
+instance LinearOrderedRing.instIsFormallyReal [LinearOrderedRing R] : IsFormallyReal R where
   eq_zero_of_sum_of_squares_eq_zero {ι} {I} {x} {i} hx hi := by
     rw [← Finset.add_sum_erase _ _ hi] at hx
     exact mul_self_eq_zero.mp (le_antisymm
