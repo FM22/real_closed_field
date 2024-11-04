@@ -6,12 +6,13 @@ Authors: Florent Schaffhauser, Artie Khovanov
 import Mathlib.Algebra.Ring.Subsemiring.Basic
 import Mathlib.Order.Chain
 import Mathlib.Tactic.Ring
+import Mathlib.Algebra.CharP.Defs
 
 /-
 ## Definitions
 -/
 
-section defns
+section Defns
 
 variable (S R : Type*) [CommRing R] [SetLike S R]
 
@@ -83,21 +84,23 @@ def RingPreorderingClass.toRingPreordering (P : S) :
 lemma RingPreorderingClass.coe_toRingPreordering (P : S) : (toRingPreordering P : Set R) = P := by
   rw [toRingPreordering]; aesop
 
-end defns
+end Defns
+
+namespace RingPreordering
 
 /-
 ## Basic properties
 -/
 
 @[aesop safe apply (rule_sets := [SetLike])]
-theorem RingPreordering.inv_mem
+theorem inv_mem
     {S R : Type*} [CommRing R] [SetLike S R] [RingPreorderingClass S R] {P : S} {a : Rˣ}
     (ha : ↑a ∈ P) : ↑a⁻¹ ∈ P := by
   rw [(by simp : (↑a⁻¹ : R) = a * (a⁻¹ * a⁻¹))]
   aesop (config := { enableSimp := false })
 
 /- Construct a preordering from a minimal set of axioms. -/
-def RingPreordering.mk' {R : Type*} [CommRing R] (P : Set R)
+def mk' {R : Type*} [CommRing R] (P : Set R)
     (add   : ∀ {x y : R}, x ∈ P → y ∈ P → x + y ∈ P)
     (mul   : ∀ {x y : R}, x ∈ P → y ∈ P → x * y ∈ P)
     (sq    : ∀ x : R, x * x ∈ P)
@@ -111,7 +114,7 @@ def RingPreordering.mk' {R : Type*} [CommRing R] (P : Set R)
   zero_mem' := by simpa using sq 0
   one_mem' := by simpa using sq 1
 
-theorem RingPreordering.nonempty_chain_bddAbove {R : Type*} [CommRing R]
+theorem nonempty_chain_bddAbove {R : Type*} [CommRing R]
     (c : Set (RingPreordering R)) (hcc : IsChain (· ≤ ·) c) (hc : c.Nonempty) : BddAbove c := by
   rw [bddAbove_def]
   let Q := mk (sSup (toSubsemiring '' c))
@@ -127,3 +130,62 @@ theorem RingPreordering.nonempty_chain_bddAbove {R : Type*} [CommRing R]
   have : P.toSubsemiring ≤ Q.toSubsemiring :=
     CompleteLattice.le_sSup (toSubsemiring '' c) _ (by aesop)
   aesop
+
+
+/-
+## Support
+-/
+
+variable {S R : Type*} [CommRing R] [SetLike S R] {P : S}
+
+namespace AddSubgroup
+
+variable [RingPreorderingClass S R]
+
+variable (P) in
+/--
+The support of a ring preordering `P` in a commutative ring `R` is
+the set of elements `x` in `R` such that both `x` and `-x` lie in `P`.
+-/
+def preordering_support : AddSubgroup R where
+  carrier := {x : R | x ∈ P ∧ -x ∈ P}
+  zero_mem' := by aesop
+  add_mem' := by aesop
+  neg_mem' := by aesop
+
+@[simp] lemma mem_support : x ∈ preordering_support P ↔ x ∈ P ∧ -x ∈ P := Iff.rfl
+@[simp, norm_cast] lemma coe_support : preordering_support P = {x : R | x ∈ P ∧ -x ∈ P} := rfl
+
+end AddSubgroup
+
+variable (P) in
+class RingPreordering.HasIdealSupport : Prop where
+  smul_mem (x a : R) (ha : a ∈ P) : x * a ∈ P
+
+namespace Ideal
+
+variable [RingPreorderingClass S R] [RingPreordering.HasIdealSupport P]
+
+variable (P) in
+/--
+The support of a ring preordering `P` in a commutative ring `R` is
+the set of elements `x` in `R` such that both `x` and `-x` lie in `P`.
+-/
+def preordering_support : Ideal R where
+  carrier := {x : R | x ∈ P ∧ -x ∈ P}
+  zero_mem' := by aesop
+  add_mem' := by aesop
+  neg_mem' := by aesop
+
+@[simp] lemma mem_support : x ∈ preordering_support P ↔ x ∈ P ∧ -x ∈ P := Iff.rfl
+@[simp, norm_cast] lemma coe_support : preordering_support P = {x : R | x ∈ P ∧ -x ∈ P} := rfl
+
+end Ideal
+
+instance RingOrdering.hasIdealSupport [RingOrderingClass S R] :
+    RingPreordering.HasIdealSupport P where
+  smul_mem x a ha := by sorry
+
+instance RingPreordering.hasIdealSupport [RingPreorderingClass S R] [Fact (¬ CharP R 2)] :
+    RingPreordering.HasIdealSupport P where
+  smul_mem x a ha := by sorry
