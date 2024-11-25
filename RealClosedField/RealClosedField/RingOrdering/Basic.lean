@@ -7,6 +7,7 @@ import Mathlib.Algebra.Ring.Subsemiring.Basic
 import Mathlib.Order.Chain
 import Mathlib.Tactic.Ring
 import Mathlib.Algebra.CharP.Defs
+import Mathlib.RingTheory.Ideal.Basic
 
 /-
 ## Definitions
@@ -131,6 +132,7 @@ theorem nonempty_chain_bddAbove {R : Type*} [CommRing R]
     CompleteLattice.le_sSup (toSubsemiring '' c) _ (by aesop)
   aesop
 
+end RingPreordering
 
 /-
 ## Support
@@ -159,12 +161,15 @@ def preordering_support : AddSubgroup R where
 end AddSubgroup
 
 variable (P) in
-class RingPreordering.HasIdealSupport : Prop where
+class RingPreorderingClass.HasIdealSupport : Prop where
   smul_mem (x a : R) (ha : a ∈ P) : x * a ∈ P
+
+export RingPreorderingClass.HasIdealSupport (smul_mem)
+attribute [aesop safe apply 0 (rule_sets := [SetLike])] smul_mem
 
 namespace Ideal
 
-variable [RingPreorderingClass S R] [RingPreordering.HasIdealSupport P]
+variable [RingPreorderingClass S R] [RingPreorderingClass.HasIdealSupport P]
 
 variable (P) in
 /--
@@ -175,17 +180,20 @@ def preordering_support : Ideal R where
   carrier := {x : R | x ∈ P ∧ -x ∈ P}
   zero_mem' := by aesop
   add_mem' := by aesop
-  neg_mem' := by aesop
+  smul_mem' := by
+    intro c x hx
+    have : c * (-x) ∈ P := RingPreorderingClass.HasIdealSupport.smul_mem _ _ (by simp_all)
+    aesop
 
 @[simp] lemma mem_support : x ∈ preordering_support P ↔ x ∈ P ∧ -x ∈ P := Iff.rfl
 @[simp, norm_cast] lemma coe_support : preordering_support P = {x : R | x ∈ P ∧ -x ∈ P} := rfl
 
 end Ideal
 
-instance RingOrdering.hasIdealSupport [RingOrderingClass S R] :
-    RingPreordering.HasIdealSupport P where
+instance RingPreorderingClass.hasIdealSupport [RingOrderingClass S R] :
+    RingPreorderingClass.HasIdealSupport P where
   smul_mem x a ha := by sorry
 
-instance RingPreordering.hasIdealSupport [RingPreorderingClass S R] [Fact (¬ CharP R 2)] :
-    RingPreordering.HasIdealSupport P where
+instance RingPreorderingClass.hasIdealSupport' [RingPreorderingClass S R] [Fact (¬ CharP R 2)] :
+    RingPreorderingClass.HasIdealSupport P where
   smul_mem x a ha := by sorry
