@@ -222,7 +222,7 @@ instance RingPreordering.hasIdealSupport [RingOrderingClass S R] :
         rw [AddSubgroup.mem_support] at *
         exact ⟨by simpa using mul_mem hx ha.2, by simpa using mul_mem hx ha.1⟩
 
-theorem RingPreordering.hasIdealSupport_of_CharP (isUnit_2 : IsUnit (2 : R)) :
+theorem RingPreordering.hasIdealSupport_of_isUnit_2 (isUnit_2 : IsUnit (2 : R)) :
     RingPreordering.HasIdealSupport P := by
   apply HasIdealSupport.hasIdealSupport
   intro x a h₁a h₂a
