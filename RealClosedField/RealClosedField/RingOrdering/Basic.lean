@@ -93,6 +93,18 @@ namespace RingPreordering
 ## Basic properties
 -/
 
+@[aesop safe 2 apply (rule_sets := [SetLike])]
+/- There is no neg_mem -/
+lemma neg_mul_mem_of_mem [CommRing R] [SetLike S R] [RingPreorderingClass S R] {P : S} {x y : R}
+    (hx : x ∈ P) (hy : -y ∈ P) : -(x * y) ∈ P := by
+  simpa using mul_mem hx hy
+
+@[aesop safe 2 apply (rule_sets := [SetLike])]
+/- There is no neg_mem -/
+lemma neg_mul_mem_of_neg_mem [CommRing R] [SetLike S R] [RingPreorderingClass S R] {P : S} {x y : R}
+    (hx : -x ∈ P) (hy : y ∈ P) : -(x * y) ∈ P := by
+  simpa using mul_mem hx hy
+
 @[aesop safe apply (rule_sets := [SetLike])]
 theorem inv_mem
     {S R : Type*} [CommRing R] [SetLike S R] [RingPreorderingClass S R] {P : S} {a : Rˣ}
@@ -138,11 +150,9 @@ end RingPreordering
 ## Support
 -/
 
-variable {S R : Type*} [CommRing R] [SetLike S R] {P : S}
+variable {S R : Type*} [CommRing R] [SetLike S R] [RingPreorderingClass S R] {P : S}
 
 namespace AddSubgroup
-
-variable [RingPreorderingClass S R]
 
 variable (P) in
 /--
@@ -160,16 +170,32 @@ def preordering_support : AddSubgroup R where
 
 end AddSubgroup
 
-variable (P) in
-class RingPreorderingClass.HasIdealSupport : Prop where
-  smul_mem (x a : R) (ha : a ∈ P) : x * a ∈ P
+namespace RingPreordering
 
-export RingPreorderingClass.HasIdealSupport (smul_mem)
-attribute [aesop safe apply 0 (rule_sets := [SetLike])] smul_mem
+variable (P) in
+class HasIdealSupport : Prop where
+  smul_mem_support (x : R) {a : R} (ha : a ∈ AddSubgroup.preordering_support P) :
+    x * a ∈ AddSubgroup.preordering_support P
+
+theorem HasIdealSupport.smul_mem [RingPreordering.HasIdealSupport P]
+  (x : R) {a : R} (h₁a : a ∈ P) (h₂a : -a ∈ P) : x * a ∈ P := by
+  have := RingPreordering.HasIdealSupport.smul_mem_support (P := P)
+  simp_all
+
+theorem HasIdealSupport.neg_smul_mem [RingPreordering.HasIdealSupport P]
+  (x : R) {a : R} (h₁a : a ∈ P) (h₂a : -a ∈ P) : -(x * a) ∈ P := by
+  have := RingPreordering.HasIdealSupport.smul_mem_support (P := P)
+  simp_all
+
+theorem HasIdealSupport.hasIdealSupport
+    (h : ∀ x a : R, a ∈ P → -a ∈ P → x * a ∈ P ∧ -(x * a) ∈ P) : HasIdealSupport P where
+  smul_mem_support := by simp_all
+
+end RingPreordering
 
 namespace Ideal
 
-variable [RingPreorderingClass S R] [RingPreorderingClass.HasIdealSupport P]
+variable [RingPreordering.HasIdealSupport P]
 
 variable (P) in
 /--
@@ -180,20 +206,32 @@ def preordering_support : Ideal R where
   carrier := {x : R | x ∈ P ∧ -x ∈ P}
   zero_mem' := by aesop
   add_mem' := by aesop
-  smul_mem' := by
-    intro c x hx
-    have : c * (-x) ∈ P := RingPreorderingClass.HasIdealSupport.smul_mem _ _ (by simp_all)
-    aesop
+  smul_mem' := by simpa using RingPreordering.HasIdealSupport.smul_mem_support (P := P)
 
 @[simp] lemma mem_support : x ∈ preordering_support P ↔ x ∈ P ∧ -x ∈ P := Iff.rfl
 @[simp, norm_cast] lemma coe_support : preordering_support P = {x : R | x ∈ P ∧ -x ∈ P} := rfl
 
 end Ideal
 
-instance RingPreorderingClass.hasIdealSupport [RingOrderingClass S R] :
-    RingPreorderingClass.HasIdealSupport P where
-  smul_mem x a ha := by sorry
+instance RingPreordering.hasIdealSupport [RingOrderingClass S R] :
+    RingPreordering.HasIdealSupport P where
+  smul_mem_support x a ha := by
+    cases mem_or_neg_mem P x with
+    | inl => aesop
+    | inr hx =>
+        rw [AddSubgroup.mem_support] at *
+        exact ⟨by simpa using mul_mem hx ha.2, by simpa using mul_mem hx ha.1⟩
 
-instance RingPreorderingClass.hasIdealSupport' [RingPreorderingClass S R] [Fact (¬ CharP R 2)] :
-    RingPreorderingClass.HasIdealSupport P where
-  smul_mem x a ha := by sorry
+theorem RingPreordering.hasIdealSupport_of_CharP (isUnit_2 : IsUnit (2 : R)) :
+    RingPreordering.HasIdealSupport P := by
+  apply HasIdealSupport.hasIdealSupport
+  intro x a h₁a h₂a
+  obtain ⟨half, h2⟩ := IsUnit.exists_left_inv isUnit_2
+  let y := (1 + x) * half
+  let z := (1 - x) * half
+  have mem : (y * y) * a + (z * z) * (-a) ∈ P ∧ (y * y) * (-a) + (z * z) * a ∈ P := by aesop
+  have : x = x * (half * (half * 2) * 2) := by simp [h2]
+  have : x = y * y - z * z := by simp only [y, z]; ring_nf at this ⊢; assumption
+  rw [this]
+  ring_nf at mem ⊢
+  assumption
