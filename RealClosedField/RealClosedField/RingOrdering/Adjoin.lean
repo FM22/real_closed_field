@@ -6,6 +6,7 @@ Authors: Florent Schaffhauser, Artie Khovanov
 import RealClosedField.RealClosedField.RingOrdering.Basic
 
 import Mathlib.Order.Zorn
+import Mathlib.Tactic.Polyrith
 
 /-
 ## Adjoining an element to a preordering
@@ -87,12 +88,14 @@ variable {P} in
 theorem minus_one_not_mem_or {x y : R} (h : - (x * y) ∈ P) :
     -1 ∉ Subsemiring.ringPreordering_adjoin P x ∨ -1 ∉ Subsemiring.ringPreordering_adjoin P y := by
   by_contra
+  apply minus_one_not_mem P
   have hx : -1 ∈ Subsemiring.ringPreordering_adjoin P x := by aesop
   have hy : -1 ∈ Subsemiring.ringPreordering_adjoin P y := by aesop
-  rcases hx with ⟨t₁, ht₁, t₂, ht₂, eqx⟩
-  rcases hy with ⟨s₁, hs₁, s₂, hs₂, eqy⟩
-  /- annoying calculation -/
-  sorry
+  rcases hx with ⟨s₁, hs₁, s₂, hs₂, eqx⟩
+  rcases hy with ⟨t₁, ht₁, t₂, ht₂, eqy⟩
+  rw [(by linear_combination (t₁ + 1) * eqx - 1 * x * s₂ * eqy :
+    -1 = (-(x * y)) * s₂ * t₂ + s₁ + t₁ + (s₁ * t₁))]
+  aesop (config := { enableSimp := false })
 
 theorem minus_one_not_mem_or' :
     -1 ∉ Subsemiring.ringPreordering_adjoin P a ∨ -1 ∉ Subsemiring.ringPreordering_adjoin P (-a)
@@ -104,8 +107,7 @@ theorem minus_one_not_mem_ringPreordering_adjoin
   have : -1 * (1 + a) ∈ Subsemiring.ringPreordering_adjoin P a :=
     by aesop (config := { enableSimp := false })
   obtain ⟨x, hx, y, hy, eqn⟩ := this
-  have : x + a * y + (1 + a) = 0 := (add_eq_zero_iff_eq_neg).mpr (by aesop)
-  exact h _ _ hx hy (by ring_nf at this ⊢; assumption)
+  exact h _ _ hx hy (by linear_combination -(1 * eqn) : x + (1 + y) * a + 1 = 0)
 
 /--
 If `F` is a field, `P` is a preordering on `F`, and `a` is an element of `P` such that `-a ∉ P`,
