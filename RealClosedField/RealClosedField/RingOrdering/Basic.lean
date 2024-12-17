@@ -8,6 +8,7 @@ import Mathlib.Order.Chain
 import Mathlib.Tactic.Ring
 import Mathlib.Algebra.CharP.Defs
 import Mathlib.RingTheory.Ideal.Basic
+import Mathlib.Tactic.FieldSimp
 
 /-
 ## Definitions
@@ -45,34 +46,9 @@ instance RingPreordering.instRingPreorderingClass : RingPreorderingClass (RingPr
   square_mem {P} := P.square_mem'
   minus_one_not_mem {P} := P.minus_one_not_mem'
 
-/-- `RingOrderingClass S R` says that `S` is a type of orderings on `R`. -/
-class RingOrderingClass extends RingPreorderingClass S R : Prop where
-  mem_or_neg_mem (P : S) (x : R) : x ∈ P ∨ -x ∈ P
+variable {S R : Type*} [CommRing R] [SetLike S R] [RingPreorderingClass S R]
 
-export RingOrderingClass (mem_or_neg_mem)
-
-/-- An ordering `P` on a ring `R` is a preordering such that, for every `x` in `R`,
-either `x` or `-x` lies in `P`. Equivalently, an ordering is a maximal preordering. -/
-structure RingOrdering extends RingPreordering R where
-  mem_or_neg_mem' (x : R) : x ∈ carrier ∨ -x ∈ carrier
-
-instance RingOrdering.instSetLike : SetLike (RingOrdering R) R where
-  coe P := P.carrier
-  coe_injective' p q h := by cases p; cases q; congr; exact SetLike.ext' h
-
-instance RingOrdering.instRingOrderingClass : RingOrderingClass (RingOrdering R) R where
-  zero_mem {P} := P.zero_mem'
-  one_mem {P} := P.one_mem'
-  add_mem {P} := P.add_mem'
-  mul_mem {P} := P.mul_mem'
-  square_mem {P} := P.square_mem'
-  minus_one_not_mem {P} := P.minus_one_not_mem'
-  mem_or_neg_mem {P} := P.mem_or_neg_mem'
-
-variable{S R : Type*} [CommRing R] [SetLike S R] [RingPreorderingClass S R]
-
-def RingPreorderingClass.toRingPreordering (P : S) :
-    RingPreordering R where
+def RingPreorderingClass.toRingPreordering (P : S) : RingPreordering R where
   carrier := P
   zero_mem' := zero_mem P
   one_mem' := one_mem P
@@ -87,30 +63,34 @@ lemma RingPreorderingClass.coe_toRingPreordering (P : S) : (toRingPreordering P 
 
 end Defns
 
-namespace RingPreordering
+variable {S R : Type*} [CommRing R] [SetLike S R] [RingPreorderingClass S R] {P : S}
 
 /-
 ## Basic properties
 -/
 
+namespace RingPreordering
+
 @[aesop safe 2 apply (rule_sets := [SetLike])]
 /- There is no neg_mem -/
-lemma neg_mul_mem_of_mem [CommRing R] [SetLike S R] [RingPreorderingClass S R] {P : S} {x y : R}
-    (hx : x ∈ P) (hy : -y ∈ P) : -(x * y) ∈ P := by
+lemma neg_mul_mem_of_mem {x y : R} (hx : x ∈ P) (hy : -y ∈ P) : -(x * y) ∈ P := by
   simpa using mul_mem hx hy
 
 @[aesop safe 2 apply (rule_sets := [SetLike])]
 /- There is no neg_mem -/
-lemma neg_mul_mem_of_neg_mem [CommRing R] [SetLike S R] [RingPreorderingClass S R] {P : S} {x y : R}
-    (hx : -x ∈ P) (hy : y ∈ P) : -(x * y) ∈ P := by
+lemma neg_mul_mem_of_neg_mem {x y : R} (hx : -x ∈ P) (hy : y ∈ P) : -(x * y) ∈ P := by
   simpa using mul_mem hx hy
 
 @[aesop safe apply (rule_sets := [SetLike])]
-theorem inv_mem
-    {S R : Type*} [CommRing R] [SetLike S R] [RingPreorderingClass S R] {P : S} {a : Rˣ}
-    (ha : ↑a ∈ P) : ↑a⁻¹ ∈ P := by
+theorem inv_mem {a : Rˣ} (ha : ↑a ∈ P) : ↑a⁻¹ ∈ P := by
   rw [(by simp : (↑a⁻¹ : R) = a * (a⁻¹ * a⁻¹))]
   aesop (config := { enableSimp := false })
+
+@[aesop safe apply (rule_sets := [SetLike])]
+theorem Field.inv_mem {S F : Type*} [Field F] [SetLike S F] [RingPreorderingClass S F]
+    {P : S} {a : F} (ha : a ∈ P) : a⁻¹ ∈ P := by
+  rw [(by field_simp : a⁻¹ = a * (a⁻¹ * a⁻¹))]
+  aesop
 
 /- Construct a preordering from a minimal set of axioms. -/
 def mk' {R : Type*} [CommRing R] (P : Set R)
@@ -149,8 +129,6 @@ end RingPreordering
 /-
 ## Support
 -/
-
-variable {S R : Type*} [CommRing R] [SetLike S R] [RingPreorderingClass S R] {P : S}
 
 namespace AddSubgroup
 
@@ -203,9 +181,7 @@ The support of a ring preordering `P` in a commutative ring `R` is
 the set of elements `x` in `R` such that both `x` and `-x` lie in `P`.
 -/
 def preordering_support : Ideal R where
-  carrier := {x : R | x ∈ P ∧ -x ∈ P}
-  zero_mem' := by aesop
-  add_mem' := by aesop
+  __ := AddSubgroup.preordering_support P
   smul_mem' := by simpa using RingPreordering.HasIdealSupport.smul_mem_support (P := P)
 
 @[simp] lemma mem_support : x ∈ preordering_support P ↔ x ∈ P ∧ -x ∈ P := Iff.rfl
@@ -213,19 +189,9 @@ def preordering_support : Ideal R where
 
 end Ideal
 
-instance RingPreordering.hasIdealSupport [RingOrderingClass S R] :
-    RingPreordering.HasIdealSupport P where
-  smul_mem_support x a ha := by
-    cases mem_or_neg_mem P x with
-    | inl => aesop
-    | inr hx =>
-        rw [AddSubgroup.mem_support] at *
-        exact ⟨by simpa using mul_mem hx ha.2, by simpa using mul_mem hx ha.1⟩
-
 theorem RingPreordering.hasIdealSupport_of_isUnit_2 (isUnit_2 : IsUnit (2 : R)) :
     RingPreordering.HasIdealSupport P := by
-  apply HasIdealSupport.hasIdealSupport
-  intro x a h₁a h₂a
+  refine HasIdealSupport.hasIdealSupport (fun x a h₁a h₂a => ?_)
   obtain ⟨half, h2⟩ := IsUnit.exists_left_inv isUnit_2
   let y := (1 + x) * half
   let z := (1 - x) * half
@@ -235,3 +201,86 @@ theorem RingPreordering.hasIdealSupport_of_isUnit_2 (isUnit_2 : IsUnit (2 : R)) 
   rw [this]
   ring_nf at mem ⊢
   assumption
+
+/-
+## (Prime) orderings
+-/
+
+namespace RingPreordering
+
+section IsOrdering
+
+variable (P) in
+/-- An ordering `P` on a ring `R` is a preordering such that, for every `x` in `R`,
+either `x` or `-x` lies in `P`. -/
+class IsOrdering : Prop where
+  mem_or_neg_mem' (x : R) : x ∈ P ∨ -x ∈ P
+
+variable [IsOrdering P]
+
+variable (P) in
+/-- Technical lemma to get P as explicit argument -/
+lemma mem_or_neg_mem : ∀ x : R, x ∈ P ∨ -x ∈ P := IsOrdering.mem_or_neg_mem' (P := P)
+
+@[aesop unsafe apply]
+lemma neg_mem_of_not_mem (x : R) (h : x ∉ P) : -x ∈ P := by
+  have := mem_or_neg_mem P x
+  simp_all
+
+@[aesop unsafe apply]
+lemma mem_of_not_neg_mem (x : R) (h : -x ∉ P) : x ∈ P := by
+  have := mem_or_neg_mem P x
+  simp_all
+
+instance hasIdealSupport : HasIdealSupport P where
+  smul_mem_support x a ha := by
+    cases mem_or_neg_mem (P := P) x with
+    | inl => aesop
+    | inr hx =>
+        rw [AddSubgroup.mem_support] at *
+        exact ⟨by simpa using mul_mem hx ha.2, by simpa using mul_mem hx ha.1⟩
+
+end IsOrdering
+
+variable (P) in
+/-- A prime ordering `P` on a ring `R` is an ordering whose support is a prime ideal. -/
+class IsPrimeOrdering : Prop where
+  mem_or_neg_mem' (x : R) : x ∈ P ∨ -x ∈ P
+  mem_or_mem' {x y : R} (h : x * y ∈ AddSubgroup.preordering_support P) :
+    x ∈ AddSubgroup.preordering_support P ∨ y ∈ AddSubgroup.preordering_support P
+
+instance isOrdering [IsPrimeOrdering P] :
+    IsOrdering P where
+  mem_or_neg_mem' := IsPrimeOrdering.mem_or_neg_mem'
+
+instance preordering_support_isPrime [IsPrimeOrdering P] :
+    (Ideal.preordering_support P).IsPrime where
+  ne_top' h := minus_one_not_mem P (by aesop : 1 ∈ Ideal.preordering_support P).2
+  mem_or_mem' := IsPrimeOrdering.mem_or_mem'
+
+instance isPrimeOrdering_of_isOrdering
+    [IsOrdering P] [(Ideal.preordering_support P).IsPrime] : IsPrimeOrdering P where
+  mem_or_neg_mem' := mem_or_neg_mem P
+  mem_or_mem' := Ideal.IsPrime.mem_or_mem (by assumption)
+
+theorem isPrimeOrdering_iff :
+    IsPrimeOrdering P ↔ (∀ a b : R, -(a * b) ∈ P → a ∈ P ∨ b ∈ P) := by
+  refine Iff.intro (fun prime a b h₁ => ?_) (fun h => ?_)
+  · by_contra h₂
+    have : a * b ∈ P := by simpa using mul_mem (by aesop : -a ∈ P) (by aesop : -b ∈ P)
+    have : a ∈ Ideal.preordering_support P ∨ b ∈ Ideal.preordering_support P :=
+      Ideal.IsPrime.mem_or_mem inferInstance (by simp_all)
+    simp_all
+  · constructor
+    · aesop
+    · intro x y hxy
+      by_contra h₂
+      cases (by aesop : x ∈ P ∨ -x ∈ P) with
+      | inl =>  have := h (-x) y (by aesop)
+                have := h (-x) (-y) (by aesop)
+                aesop
+      | inr =>  have := h x y (by aesop)
+                have := h x (-y) (by aesop)
+                aesop
+
+end RingPreordering
