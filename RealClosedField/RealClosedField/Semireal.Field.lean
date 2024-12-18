@@ -6,7 +6,11 @@ Authors: Artie Khovanov
 import RealClosedField.RealClosedField.FormallyReal
 import RealClosedField.RealClosedField.RingOrdering.Adjoin
 
-/- TODO: prove prime orderings with support {0} are maximal ring cones, and deduce field case -/
+/- TODO: prime orderings with support {0} are maximal cones;
+         deduce prime orderings on fields are maximal cones -/
+/- TODO: orderings with support I induce maximal ring cones on R/I -/
+/- TODO: ordering on an ID <-> ordering on its fraction field -/
+/- TODO: decide whether to put these in separate file? or just in Ring.Cone? -/
 
 variable (S F : Type*) [Field F] [SetLike S F] [RingPreorderingClass S F]
 
