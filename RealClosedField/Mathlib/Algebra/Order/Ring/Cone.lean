@@ -101,10 +101,9 @@ instance RingConeClass.instRingConeClass_of_isMaxCone {S R : Type*}
   eq_zero_of_mem_of_neg_mem := eq_zero_of_mem_of_neg_mem (S := S)
 
 open Classical in
-/-- A maximal cone over a commutative ring `R` is an ordering on `R`. -/
-instance RingConeClass.instRingOrderingClass_of_isMaxCone {S R : Type*} [Nontrivial R]
+instance RingConeClass.instRingPreorderingClass_of_isMaxCone {S R : Type*} [Nontrivial R]
     [CommRing R] [SetLike S R] [RingConeClass S R] :
-    RingOrderingClass {x : S // IsMaxCone x} (R := R) where
+    RingPreorderingClass {x : S // IsMaxCone x} (R := R) where
   __ := RingConeClass.toSubsemiringClass
   square_mem P x := by
     cases @mem_or_neg_mem S _ _ _ _ P.2 x with
@@ -112,6 +111,12 @@ instance RingConeClass.instRingOrderingClass_of_isMaxCone {S R : Type*} [Nontriv
     | inr hnx => have : -x * -x ∈ P := by aesop (config := { enableSimp := false })
                  simpa
   minus_one_not_mem P h := one_ne_zero <| eq_zero_of_mem_of_neg_mem (one_mem ↑P) h
-  mem_or_neg_mem P x := @mem_or_neg_mem S _ _ _ _ P.2 x
+
+open Classical in
+/-- A maximal cone over a commutative ring `R` is an ordering on `R`. -/
+instance RingConeClass.instIsOrdering_of_isMaxCone {S R : Type*} [Nontrivial R]
+    [CommRing R] [SetLike S R] [RingConeClass S R] (C : {x : S // IsMaxCone x}) :
+    RingPreordering.IsOrdering C where
+  mem_or_neg_mem' x := @mem_or_neg_mem S _ _ _ _ C.2 x
 
 /- TODO : decide whether to keep this cursed subtype instance, or whether to change to a def. -/

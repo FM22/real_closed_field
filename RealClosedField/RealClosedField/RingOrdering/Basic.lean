@@ -9,6 +9,7 @@ import Mathlib.Tactic.Ring
 import Mathlib.Algebra.CharP.Defs
 import Mathlib.RingTheory.Ideal.Basic
 import Mathlib.Tactic.FieldSimp
+import Mathlib.Tactic.Polyrith
 
 /-
 ## Definitions
@@ -83,13 +84,13 @@ lemma neg_mul_mem_of_neg_mem {x y : R} (hx : -x ∈ P) (hy : y ∈ P) : -(x * y)
 
 @[aesop safe apply (rule_sets := [SetLike])]
 theorem inv_mem {a : Rˣ} (ha : ↑a ∈ P) : ↑a⁻¹ ∈ P := by
-  rw [(by simp : (↑a⁻¹ : R) = a * (a⁻¹ * a⁻¹))]
+  rw [show (↑a⁻¹ : R) = a * (a⁻¹ * a⁻¹) by simp]
   aesop (config := { enableSimp := false })
 
 @[aesop safe apply (rule_sets := [SetLike])]
 theorem Field.inv_mem {S F : Type*} [Field F] [SetLike S F] [RingPreorderingClass S F]
     {P : S} {a : F} (ha : a ∈ P) : a⁻¹ ∈ P := by
-  rw [(by field_simp : a⁻¹ = a * (a⁻¹ * a⁻¹))]
+  rw [show a⁻¹ = a * (a⁻¹ * a⁻¹) by field_simp]
   aesop
 
 /- Construct a preordering from a minimal set of axioms. -/
@@ -108,21 +109,17 @@ def mk' {R : Type*} [CommRing R] (P : Set R)
   one_mem' := by simpa using sq 1
 
 theorem nonempty_chain_bddAbove {R : Type*} [CommRing R]
-    (c : Set (RingPreordering R)) (hcc : IsChain (· ≤ ·) c) (hc : c.Nonempty) : BddAbove c := by
-  rw [bddAbove_def]
-  let Q := mk (sSup (toSubsemiring '' c))
+    (c : Set (RingPreordering R)) (hcc : IsChain (· ≤ ·) c) (hc : c.Nonempty) : BddAbove c :=
+  ⟨mk (sSup (toSubsemiring '' c))
     (fun x => CompleteLattice.le_sSup _ hc.some.toSubsemiring (by aesop (add hc.some_mem safe))
               (by simpa using (hc.some.square_mem' x)))
     (by
       have a : ∀ x ∈ (toSubsemiring '' c), -1 ∉ x := fun P' hP' => by
         obtain ⟨P, _, rfl⟩ := (by aesop : ∃ x ∈ c, x.toSubsemiring = P')
         simpa using P.minus_one_not_mem'
-      aesop (add (Subsemiring.coe_sSup_of_directedOn (by simp [hc])
-        (IsChain.directedOn (IsChain.image _ _ _ (by aesop) hcc))) norm))
-  refine ⟨Q, fun P _ => ?_⟩
-  have : P.toSubsemiring ≤ Q.toSubsemiring :=
-    CompleteLattice.le_sSup (toSubsemiring '' c) _ (by aesop)
-  aesop
+      simp_all [Subsemiring.coe_sSup_of_directedOn (by simp [hc])
+        (IsChain.directedOn (IsChain.image _ _ _ (by aesop) hcc))]),
+  fun _ _ => by simpa using CompleteLattice.le_sSup (toSubsemiring '' c) _ (by aesop)⟩
 
 end RingPreordering
 
@@ -152,24 +149,33 @@ namespace RingPreordering
 
 variable (P) in
 class HasIdealSupport : Prop where
-  smul_mem_support (x : R) {a : R} (ha : a ∈ AddSubgroup.preordering_support P) :
+  smul_mem_support' (x : R) {a : R} (ha : a ∈ AddSubgroup.preordering_support P) :
     x * a ∈ AddSubgroup.preordering_support P
 
-theorem HasIdealSupport.smul_mem [RingPreordering.HasIdealSupport P]
+namespace HasIdealSupport
+
+variable (P) in
+/-- Technical lemma to get P as explicit argument -/
+lemma smul_mem_support [RingPreordering.HasIdealSupport P] :
+    ∀ (x : R) {a : R}, a ∈ AddSubgroup.preordering_support P →
+      x * a ∈ AddSubgroup.preordering_support P :=
+  HasIdealSupport.smul_mem_support' (P := P)
+
+theorem smul_mem [RingPreordering.HasIdealSupport P]
   (x : R) {a : R} (h₁a : a ∈ P) (h₂a : -a ∈ P) : x * a ∈ P := by
-  have := RingPreordering.HasIdealSupport.smul_mem_support (P := P)
+  have := smul_mem_support P
   simp_all
 
-theorem HasIdealSupport.neg_smul_mem [RingPreordering.HasIdealSupport P]
+theorem neg_smul_mem [RingPreordering.HasIdealSupport P]
   (x : R) {a : R} (h₁a : a ∈ P) (h₂a : -a ∈ P) : -(x * a) ∈ P := by
-  have := RingPreordering.HasIdealSupport.smul_mem_support (P := P)
+  have := smul_mem_support P
   simp_all
 
-theorem HasIdealSupport.hasIdealSupport
+theorem hasIdealSupport
     (h : ∀ x a : R, a ∈ P → -a ∈ P → x * a ∈ P ∧ -(x * a) ∈ P) : HasIdealSupport P where
-  smul_mem_support := by simp_all
+  smul_mem_support' := by simp_all
 
-end RingPreordering
+end RingPreordering.HasIdealSupport
 
 namespace Ideal
 
@@ -182,7 +188,7 @@ the set of elements `x` in `R` such that both `x` and `-x` lie in `P`.
 -/
 def preordering_support : Ideal R where
   __ := AddSubgroup.preordering_support P
-  smul_mem' := by simpa using RingPreordering.HasIdealSupport.smul_mem_support (P := P)
+  smul_mem' := by simpa using RingPreordering.HasIdealSupport.smul_mem_support P
 
 @[simp] lemma mem_support : x ∈ preordering_support P ↔ x ∈ P ∧ -x ∈ P := Iff.rfl
 @[simp, norm_cast] lemma coe_support : preordering_support P = {x : R | x ∈ P ∧ -x ∈ P} := rfl
@@ -196,9 +202,7 @@ theorem RingPreordering.hasIdealSupport_of_isUnit_2 (isUnit_2 : IsUnit (2 : R)) 
   let y := (1 + x) * half
   let z := (1 - x) * half
   have mem : (y * y) * a + (z * z) * (-a) ∈ P ∧ (y * y) * (-a) + (z * z) * a ∈ P := by aesop
-  have : x = x * (half * (half * 2) * 2) := by simp [h2]
-  have : x = y * y - z * z := by simp only [y, z]; ring_nf at this ⊢; assumption
-  rw [this]
+  rw [show x = y * y - z * z by linear_combination (-(2 * x * half) - 1 * x) * h2]
   ring_nf at mem ⊢
   assumption
 
@@ -233,12 +237,10 @@ lemma mem_of_not_neg_mem (x : R) (h : -x ∉ P) : x ∈ P := by
   simp_all
 
 instance hasIdealSupport : HasIdealSupport P where
-  smul_mem_support x a ha := by
-    cases mem_or_neg_mem (P := P) x with
+  smul_mem_support' x a ha := by
+    cases mem_or_neg_mem P x with
     | inl => aesop
-    | inr hx =>
-        rw [AddSubgroup.mem_support] at *
-        exact ⟨by simpa using mul_mem hx ha.2, by simpa using mul_mem hx ha.1⟩
+    | inr hx => simpa using ⟨by simpa using mul_mem hx ha.2, by simpa using mul_mem hx ha.1⟩
 
 end IsOrdering
 
@@ -271,16 +273,14 @@ theorem isPrimeOrdering_iff :
     have : a ∈ Ideal.preordering_support P ∨ b ∈ Ideal.preordering_support P :=
       Ideal.IsPrime.mem_or_mem inferInstance (by simp_all)
     simp_all
-  · constructor
-    · aesop
-    · intro x y hxy
-      by_contra h₂
-      cases (by aesop : x ∈ P ∨ -x ∈ P) with
-      | inl =>  have := h (-x) y (by aesop)
-                have := h (-x) (-y) (by aesop)
-                aesop
-      | inr =>  have := h x y (by aesop)
-                have := h x (-y) (by aesop)
-                aesop
+  · refine ⟨by aesop, fun {x y} hxy => ?_⟩
+    by_contra h₂
+    cases (by aesop : x ∈ P ∨ -x ∈ P) with
+    | inl =>  have := h (-x) y (by simp_all)
+              have := h (-x) (-y) (by simp_all)
+              simp_all
+    | inr =>  have := h x y (by simp_all)
+              have := h x (-y) (by simp_all)
+              simp_all
 
 end RingPreordering
