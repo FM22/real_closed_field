@@ -60,7 +60,7 @@ def nonneg : RingCone T where
 @[simp, norm_cast] lemma coe_nonneg : nonneg T = {x : T | 0 ≤ x} := rfl
 
 instance nonneg.isMaxCone {T : Type*} [LinearOrderedRing T] : IsMaxCone (nonneg T) where
-  mem_or_neg_mem := mem_or_neg_mem (C := AddGroupCone.nonneg T)
+  mem_or_neg_mem' := mem_or_neg_mem <| AddGroupCone.nonneg T
 
 end RingCone
 
@@ -79,12 +79,11 @@ due to non-customisable field: `lt`. -/
 Warning: using this def as a constructor in an instance can lead to diamonds
 due to non-customisable fields: `lt`, `decidableLT`, `decidableEq`, `compare`. -/
 @[reducible] def LinearOrderedRing.mkOfCone
-    [IsDomain R] [IsMaxCone C]
-    (dec : DecidablePred (· ∈ C)) : LinearOrderedRing R where
+    [IsDomain R] [IsMaxCone C] [DecidablePred (· ∈ C)] : LinearOrderedRing R where
   __ := OrderedRing.mkOfCone C
   __ := OrderedRing.toStrictOrderedRing R
-  le_total a b := by simpa using mem_or_neg_mem (b - a)
-  decidableLE a b := dec _
+  le_total a b := by simpa using mem_or_neg_mem C (b - a)
+  decidableLE a b := _
 
 instance RingConeClass.instSetLike_of_isMaxCone {S R : Type*}
     [CommRing R] [SetLike S R] [RingConeClass S R] : SetLike {x : S // IsMaxCone x} R
@@ -105,18 +104,18 @@ instance RingConeClass.instRingPreorderingClass_of_isMaxCone {S R : Type*} [Nont
     [CommRing R] [SetLike S R] [RingConeClass S R] :
     RingPreorderingClass {x : S // IsMaxCone x} (R := R) where
   __ := RingConeClass.toSubsemiringClass
-  square_mem P x := by
-    cases @mem_or_neg_mem S _ _ _ _ P.2 x with
+  square_mem C x := by
+    obtain ⟨C, hC⟩ := C
+    cases mem_or_neg_mem C x with
     | inl hx  => aesop
-    | inr hnx => have : -x * -x ∈ P := by aesop (config := { enableSimp := false })
-                 simpa
-  minus_one_not_mem P h := one_ne_zero <| eq_zero_of_mem_of_neg_mem (one_mem ↑P) h
+    | inr hnx => simpa using (show -x * -x ∈ C by aesop (config := { enableSimp := false }))
+  minus_one_not_mem C h := one_ne_zero <| eq_zero_of_mem_of_neg_mem (one_mem C) h
 
 open Classical in
 /-- A maximal cone over a commutative ring `R` is an ordering on `R`. -/
 instance RingConeClass.instIsOrdering_of_isMaxCone {S R : Type*} [Nontrivial R]
     [CommRing R] [SetLike S R] [RingConeClass S R] (C : {x : S // IsMaxCone x}) :
     RingPreordering.IsOrdering C where
-  mem_or_neg_mem' x := @mem_or_neg_mem S _ _ _ _ C.2 x
+  mem_or_neg_mem' x := by obtain ⟨C, hC⟩ := C; exact mem_or_neg_mem C x
 
 /- TODO : decide whether to keep this cursed subtype instance, or whether to change to a def. -/

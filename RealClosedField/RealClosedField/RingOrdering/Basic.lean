@@ -276,11 +276,11 @@ theorem isPrimeOrdering_iff :
   · refine ⟨by aesop, fun {x y} hxy => ?_⟩
     by_contra h₂
     cases (by aesop : x ∈ P ∨ -x ∈ P) with
-    | inl =>  have := h (-x) y (by simp_all)
-              have := h (-x) (-y) (by simp_all)
+    | inl =>  have := h (-x) y
+              have := h (-x) (-y)
               simp_all
-    | inr =>  have := h x y (by simp_all)
-              have := h x (-y) (by simp_all)
+    | inr =>  have := h x y
+              have := h x (-y)
               simp_all
 
 end RingPreordering

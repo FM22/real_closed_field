@@ -22,35 +22,24 @@ instance RingPreorderingClass.instRingConeClass : RingConeClass S F where
 
 instance RingPreorderingClass.instIsMaxCone (O : S) [RingPreordering.IsOrdering O] : IsMaxCone O
     where
-  mem_or_neg_mem := RingPreordering.mem_or_neg_mem O
+  mem_or_neg_mem' := RingPreordering.mem_or_neg_mem O
 
 open Classical in
 instance IsSemireal.instIsFormallyReal [IsSemireal F] : IsFormallyReal F where
   eq_zero_of_sum_of_squares_eq_zero {ι} {I} {x} {i} hx hi := by
     by_contra
-    refine add_one_ne_zero_of_isSumSq (IsSumSq.mul (IsSumSq.sum_mul_self _) (IsSumSq.mul_self _))
-      (by field_simp [hx] : 1 + (∑ j ∈ I.erase i, x j * x j) * ((x i)⁻¹ * (x i)⁻¹) = 0)
+    exact add_one_ne_zero_of_isSumSq (IsSumSq.mul (IsSumSq.sum_mul_self _) (IsSumSq.mul_self _))
+      (show 1 + (∑ j ∈ I.erase i, x j * x j) * ((x i)⁻¹ * (x i)⁻¹) = 0 by field_simp [hx])
 
-instance IsSemireal.inst_choose_isPrimeOrdering [IsSemireal F] :
-    RingPreordering.IsPrimeOrdering <| Classical.choose <|
-      RingPreordering.exists_le_isPrimeOrdering <| RingPreordering.sumSqIn F :=
-  (Classical.choose_spec <|
-    RingPreordering.exists_le_isPrimeOrdering <| RingPreordering.sumSqIn F).2
-
+open Classical RingPreordering in
 noncomputable def LinearOrderedField.mkOfIsSemireal [IsSemireal F] : LinearOrderedField F where
-  __ := LinearOrderedRing.mkOfCone
-          (Classical.choose <|
-            RingPreordering.exists_le_isPrimeOrdering <| RingPreordering.sumSqIn F)
-          (Classical.decPred _)
+  __ := have := (choose_spec <| exists_le_isPrimeOrdering <| sumSqIn F).2
+        LinearOrderedRing.mkOfCone (choose <| exists_le_isPrimeOrdering <| sumSqIn F)
   __ := ‹Field F›
-
-set_option diagnostics true
 
 theorem ArtinSchreier_basic :
     Nonempty ({S : LinearOrderedField F // S.toField = ‹Field F›}) ↔ IsSemireal F := by
   refine Iff.intro (fun h => ?_) (fun h => ?_)
-  · rcases Classical.choice h with ⟨inst, extend⟩
-    have : ExistsAddOfLE F := AddGroup.existsAddOfLE F
-    have := LinearOrderedSemiring.instIsSemireal F
+  · rcases Classical.choice h with ⟨inst, rfl⟩
     infer_instance
-  · exact Nonempty.intro ⟨LinearOrderedField.mkOfIsSemireal F, by aesop⟩
+  · exact Nonempty.intro ⟨LinearOrderedField.mkOfIsSemireal F, rfl⟩

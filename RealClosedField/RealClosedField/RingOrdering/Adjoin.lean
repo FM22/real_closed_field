@@ -4,7 +4,6 @@ Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Florent Schaffhauser, Artie Khovanov
 -/
 import RealClosedField.RealClosedField.RingOrdering.Basic
-
 import Mathlib.Order.Zorn
 
 /-
@@ -21,13 +20,12 @@ def ringPreordering_adjoin : Subsemiring R where
   zero_mem' := ⟨0, by aesop, 0, by aesop, by simp⟩
   one_mem' := ⟨1, by aesop, 0, by aesop, by simp⟩
   add_mem' := fun ha hb => by
-    obtain ⟨x₁, hx₁, y₁, hy₁, rfl⟩ := ha
-    obtain ⟨x₂, hx₂, y₂, hy₂, rfl⟩ := hb
-    exact ⟨x₁ + x₂, by aesop, y₁ + y₂, by aesop, by ring⟩
-  mul_mem' := fun ha hb => by
-    obtain ⟨x₁, hx₁, y₁, hy₁, rfl⟩ := ha
-    obtain ⟨x₂, hx₂, y₂, hy₂, rfl⟩ := hb
-    exact ⟨x₁ * x₂ + (a * a) * (y₁ * y₂), by aesop, x₁ * y₂ + y₁ * x₂, by aesop, by ring⟩
+    obtain ⟨x₁, hx₁, y₁, hy₁, eqw⟩ := ha
+    obtain ⟨x₂, hx₂, y₂, hy₂, eqz⟩ := hb
+    exact ⟨x₁ + x₂, by aesop, y₁ + y₂, by aesop, by linear_combination eqw + eqz⟩
+  mul_mem' := fun {w z} ⟨x₁, hx₁, y₁, hy₁, eqw⟩ ⟨x₂, hx₂, y₂, hy₂, eqz⟩ => by
+    exact ⟨x₁ * x₂ + (a * a) * (y₁ * y₂), by aesop, x₁ * y₂ + y₁ * x₂, by aesop,
+      by linear_combination z * eqw + (a * y₁ + x₁) * eqz⟩
 
 variable {P} in
 @[aesop unsafe 70% apply (rule_sets := [SetLike])]
