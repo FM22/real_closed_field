@@ -119,3 +119,8 @@ instance RingConeClass.instIsOrdering_of_isMaxCone {S R : Type*} [Nontrivial R]
   mem_or_neg_mem' x := by obtain ⟨C, hC⟩ := C; exact mem_or_neg_mem C x
 
 /- TODO : decide whether to keep this cursed subtype instance, or whether to change to a def. -/
+
+/- TODO: prime orderings with support {0} are maximal cones;
+         deduce prime orderings on fields are maximal cones -/
+/- TODO: orderings with support I induce maximal ring cones on R/I -/
+/- TODO: ordering on an ID <-> ordering on its fraction field -/

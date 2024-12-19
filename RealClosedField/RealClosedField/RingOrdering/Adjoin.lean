@@ -6,7 +6,7 @@ Authors: Florent Schaffhauser, Artie Khovanov
 import RealClosedField.RealClosedField.RingOrdering.Basic
 import Mathlib.Order.Zorn
 
-/-
+/-!
 ## Adjoining an element to a preordering
 -/
 
@@ -107,7 +107,7 @@ theorem minus_one_not_mem_adjoin_linear
   rw [show -a = x * y⁻¹ + y⁻¹ by field_simp; linear_combination eqn]
   aesop
 
-/-
+/-!
 ## Existence of prime orderings
 -/
 
