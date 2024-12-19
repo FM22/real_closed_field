@@ -5,12 +5,9 @@ Authors: Florent Schaffhauser, Artie Khovanov
 -/
 
 import RealClosedField.RealClosedField.RingOrdering.Defns
-import Mathlib.Order.Chain
-import Mathlib.Tactic.Ring
-import Mathlib.Algebra.CharP.Defs
-import Mathlib.Tactic.FieldSimp
-import Mathlib.Tactic.Polyrith
 import Mathlib.RingTheory.Ideal.Maps
+import Mathlib.Tactic.LinearCombination
+import Mathlib.Tactic.FieldSimp
 
 variable {S R : Type*} [CommRing R] [SetLike S R] [RingPreorderingClass S R] {P : S}
 
@@ -169,6 +166,7 @@ theorem mem_comap {P : RingPreordering B} {f : A →+* B} {x : A} : x ∈ P.coma
 theorem comap_comap (P : RingPreordering C) (g : B →+* C) (f : A →+* B) :
     (P.comap g).comap f = P.comap (g.comp f) := rfl
 
+/-- The preimage of an ordering along a ring homomorphism is an ordering. -/
 instance comap.instIsOrdering (P : RingPreordering B) [IsOrdering P] (f : A →+* B) :
     IsOrdering (comap f P) where
   mem_or_neg_mem' x := by have := mem_or_neg_mem P (f x); aesop
@@ -196,6 +194,7 @@ theorem comap_support' {P : RingPreordering B} [HasIdealSupport P] {f : A →+* 
     Ideal.preordering_support (P.comap f) = (Ideal.preordering_support P).comap f :=
   by ext; simp
 
+/-- The preimage of a prime ordering along a ring homomorphism is a prime ordering. -/
 instance comap.instIsPrimeOrdering (P : RingPreordering B) [IsPrimeOrdering P] (f : A →+* B) :
     IsPrimeOrdering (comap f P) := by
   have : (Ideal.preordering_support (P.comap f)).IsPrime := by rw [comap_support']; infer_instance
@@ -204,7 +203,7 @@ instance comap.instIsPrimeOrdering (P : RingPreordering B) [IsPrimeOrdering P] (
 /-! ## map -/
 
 /-- The image of a preordering `P` along a surjective ring homomorphism
-  with kernel contained in the support of `P` is a subring. -/
+  with kernel contained in the support of `P` is a preordering. -/
 def map {f : A →+* B} {P : RingPreordering A} (hf : Function.Surjective f)
     (hsupp : (RingHom.ker f : Set A) ⊆ AddSubgroup.preordering_support P) : RingPreordering B where
   __ := P.toSubsemiring.map f
@@ -227,6 +226,8 @@ theorem mem_map {f : A →+* B} {P : RingPreordering A} (hf : Function.Surjectiv
     (hsupp : (RingHom.ker f : Set A) ⊆ AddSubgroup.preordering_support P) :
     y ∈ map hf hsupp ↔ ∃ x ∈ P, f x = y := Iff.rfl
 
+/-- The image of an ordering `P` along a surjective ring homomorphism
+  with kernel contained in the support of `P` is an ordering. -/
 instance map.instIsOrdering {f : A →+* B} {P : RingPreordering A} [IsOrdering P]
     (hf : Function.Surjective f)
     (hsupp : (RingHom.ker f : Set A) ⊆ AddSubgroup.preordering_support P) :
@@ -278,6 +279,8 @@ theorem map_support' {f : A →+* B} {P : RingPreordering A} [HasIdealSupport P]
   · rcases h with ⟨x', hx', rfl⟩; exact Ideal.mem_map_of_mem f hx'
   · exact Ideal.mem_image_of_mem_map_of_surjective f hf h
 
+/-- The image of a prime ordering `P` along a surjective ring homomorphism
+  with kernel contained in the support of `P` is a prime ordering. -/
 instance map.instIsPrimeOrdering {f : A →+* B} {P : RingPreordering A} [IsPrimeOrdering P]
     (hf : Function.Surjective f)
     (hsupp : (RingHom.ker f : Set A) ⊆ AddSubgroup.preordering_support P) :
