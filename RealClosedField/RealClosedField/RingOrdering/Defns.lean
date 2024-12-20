@@ -11,7 +11,7 @@ import Mathlib.RingTheory.Ideal.Basic
 ## Preorderings
 -/
 
-section Preordering
+section defns
 
 variable (S R : Type*) [CommRing R] [SetLike S R]
 
@@ -43,6 +43,14 @@ instance RingPreordering.instRingPreorderingClass : RingPreorderingClass (RingPr
   square_mem {P} := P.square_mem'
   minus_one_not_mem {P} := P.minus_one_not_mem'
 
+@[simp]
+theorem RingPreordering.mem_toSubsemiring {P : RingPreordering R} {x : R} :
+  x ∈ P.toSubsemiring ↔ x ∈ P := Iff.rfl
+
+@[simp]
+theorem RingPreordering.coe_toSubsemiring {P : RingPreordering R} :
+    (P.toSubsemiring : Set R) = P := rfl
+
 variable {S R : Type*} [CommRing R] [SetLike S R] [RingPreorderingClass S R] (P : S)
 
 def RingPreorderingClass.toRingPreordering : RingPreordering R where
@@ -55,10 +63,15 @@ def RingPreorderingClass.toRingPreordering : RingPreordering R where
   minus_one_not_mem' := minus_one_not_mem P
 
 @[simp]
-lemma RingPreorderingClass.coe_toRingPreordering : (toRingPreordering P : Set R) = P := by
+lemma RingPreorderingClass.mem_toRingPreordering {x : R} :
+    x ∈ (toRingPreordering P : Set R) ↔  x ∈ P := by
   rw [toRingPreordering]; aesop
 
-end Preordering
+@[simp]
+lemma RingPreorderingClass.coe_toRingPreordering : (toRingPreordering P : Set R) = P := by
+  rw [toRingPreordering]; rfl
+
+end defns
 
 variable {S R : Type*} [CommRing R] [SetLike S R] [RingPreorderingClass S R] {P : S}
 
@@ -66,67 +79,61 @@ variable {S R : Type*} [CommRing R] [SetLike S R] [RingPreorderingClass S R] {P 
 ## Support
 -/
 
-namespace AddSubgroup
+namespace RingPreordering.AddSubgroup
 
 variable (P) in
 /--
 The support of a ring preordering `P` in a commutative ring `R` is
 the set of elements `x` in `R` such that both `x` and `-x` lie in `P`.
 -/
-def preordering_support : AddSubgroup R where
+def support : AddSubgroup R where
   carrier := {x : R | x ∈ P ∧ -x ∈ P}
   zero_mem' := by aesop
   add_mem' := by aesop
   neg_mem' := by aesop
 
-@[simp] lemma mem_support : x ∈ preordering_support P ↔ x ∈ P ∧ -x ∈ P := Iff.rfl
-@[simp, norm_cast] lemma coe_support : preordering_support P = {x : R | x ∈ P ∧ -x ∈ P} := rfl
+@[simp] lemma mem_support : x ∈ support P ↔ x ∈ P ∧ -x ∈ P := Iff.rfl
+@[simp, norm_cast] lemma coe_support : support P = {x : R | x ∈ P ∧ -x ∈ P} := rfl
 
 end AddSubgroup
 
-namespace RingPreordering
-
 variable (P) in
 class HasIdealSupport : Prop where
-  smul_mem_support' (x : R) {a : R} (ha : a ∈ AddSubgroup.preordering_support P) :
-    x * a ∈ AddSubgroup.preordering_support P
+  smul_mem_support' (x : R) {a : R} (ha : a ∈ AddSubgroup.support P) :
+    x * a ∈ AddSubgroup.support P
 
 variable (P) in
 /-- Technical lemma to get P as explicit argument -/
-lemma smul_mem_support [RingPreordering.HasIdealSupport P] :
-    ∀ (x : R) {a : R}, a ∈ AddSubgroup.preordering_support P →
-      x * a ∈ AddSubgroup.preordering_support P :=
+lemma smul_mem_support [HasIdealSupport P] :
+    ∀ (x : R) {a : R}, a ∈ AddSubgroup.support P →
+      x * a ∈ AddSubgroup.support P :=
   HasIdealSupport.smul_mem_support' (P := P)
 
 theorem hasIdealSupport
     (h : ∀ x a : R, a ∈ P → -a ∈ P → x * a ∈ P ∧ -(x * a) ∈ P) : HasIdealSupport P where
   smul_mem_support' := by simp_all
 
-end RingPreordering
-
 namespace Ideal
 
-variable [RingPreordering.HasIdealSupport P]
+variable [HasIdealSupport P]
 
 variable (P) in
 /--
 The support of a ring preordering `P` in a commutative ring `R` is
 the set of elements `x` in `R` such that both `x` and `-x` lie in `P`.
 -/
-def preordering_support : Ideal R where
-  __ := AddSubgroup.preordering_support P
-  smul_mem' := by simpa using RingPreordering.smul_mem_support P
+def support : Ideal R where
+  __ := AddSubgroup.support P
+  smul_mem' := by simpa using smul_mem_support P
 
-@[simp] lemma mem_support : x ∈ preordering_support P ↔ x ∈ P ∧ -x ∈ P := Iff.rfl
-@[simp, norm_cast] lemma coe_support : preordering_support P = {x : R | x ∈ P ∧ -x ∈ P} := rfl
+@[simp] lemma mem_support : x ∈ support P ↔ x ∈ P ∧ -x ∈ P := Iff.rfl
+@[simp, norm_cast] lemma coe_support : support P = {x : R | x ∈ P ∧ -x ∈ P} := rfl
 
 end Ideal
 
 /-!
 ## (Prime) orderings
 -/
-
-namespace RingPreordering
 
 section IsOrdering
 
@@ -148,9 +155,11 @@ variable (P) in
 /-- A prime ordering `P` on a ring `R` is an ordering whose support is a prime ideal. -/
 class IsPrimeOrdering : Prop where
   mem_or_neg_mem' (x : R) : x ∈ P ∨ -x ∈ P
-  mem_or_mem' {x y : R} (h : x * y ∈ AddSubgroup.preordering_support P) :
-    x ∈ AddSubgroup.preordering_support P ∨ y ∈ AddSubgroup.preordering_support P
+  mem_or_mem' {x y : R} (h : x * y ∈ AddSubgroup.support P) :
+    x ∈ AddSubgroup.support P ∨ y ∈ AddSubgroup.support P
 
 instance isOrdering [IsPrimeOrdering P] :
     IsOrdering P where
   mem_or_neg_mem' := IsPrimeOrdering.mem_or_neg_mem'
+
+end RingPreordering

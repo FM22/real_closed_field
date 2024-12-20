@@ -33,7 +33,6 @@ noncomputable def LinearOrderedField.mkOfIsSemireal [IsSemireal F] : LinearOrder
 
 theorem ArtinSchreier_basic :
     Nonempty ({S : LinearOrderedField F // S.toField = ‹Field F›}) ↔ IsSemireal F := by
-  refine Iff.intro (fun h => ?_) (fun h => ?_)
-  · rcases Classical.choice h with ⟨inst, rfl⟩
-    infer_instance
-  · exact Nonempty.intro ⟨LinearOrderedField.mkOfIsSemireal F, rfl⟩
+  refine Iff.intro (fun h => ?_) (fun _ => Nonempty.intro ⟨LinearOrderedField.mkOfIsSemireal F, rfl⟩)
+  rcases Classical.choice h with ⟨inst, rfl⟩
+  infer_instance

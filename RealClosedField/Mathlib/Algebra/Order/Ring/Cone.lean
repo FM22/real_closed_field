@@ -7,6 +7,7 @@ import Mathlib.Algebra.Order.Group.Cone
 import Mathlib.Algebra.Order.Ring.Basic
 import Mathlib.Algebra.Ring.Subsemiring.Order
 import RealClosedField.RealClosedField.RingOrdering.Basic
+import Mathlib.RingTheory.Ideal.Quotient.Basic
 
 /-!
 # Construct ordered rings from rings with a specified positive cone.
@@ -45,6 +46,14 @@ instance RingCone.instRingConeClass (R : Type*) [Ring R] :
   eq_zero_of_mem_of_neg_mem {C} := C.eq_zero_of_mem_of_neg_mem'
 
 namespace RingCone
+
+@[simp]
+theorem mem_toSubsemiring (R : Type*) [Ring R] (C : RingCone R) {x : R} :
+  x ∈ C.toSubsemiring ↔ x ∈ C := Iff.rfl
+
+@[simp]
+theorem coe_toSubsemiring (R : Type*) [Ring R] (C : RingCone R) :
+    (C.toSubsemiring : Set R) = C := rfl
 
 variable {T : Type*} [OrderedRing T] {a : T}
 
@@ -118,9 +127,42 @@ instance RingConeClass.instIsOrdering_of_isMaxCone {S R : Type*} [Nontrivial R]
     RingPreordering.IsOrdering C where
   mem_or_neg_mem' x := by obtain ⟨C, hC⟩ := C; exact mem_or_neg_mem C x
 
-/- TODO : decide whether to keep this cursed subtype instance, or whether to change to a def. -/
+/- TODO : decide whether to keep the above cursed subtype instance,
+          or whether to change to a def. -/
 
-/- TODO: prime orderings with support {0} are maximal cones;
-         deduce prime orderings on fields are maximal cones -/
+@[reducible] def RingCone.mkOfRingPreordering {S R : Type*}
+    [CommRing R] [SetLike S R] [RingPreorderingClass S R] {P : S}
+    (hP : RingPreordering.AddSubgroup.support P = ⊥) : RingCone R where
+  __ := (RingPreorderingClass.toRingPreordering P).toSubsemiring
+  eq_zero_of_mem_of_neg_mem' {a} := by
+    have : ∀ x, x ∈ RingPreordering.AddSubgroup.support P → x ∈ (⊥ : AddSubgroup R) := by simp_all
+    rcases hP with -
+    aesop
+  /- TODO : make this proof less awful -/
+
+instance RingCone.mkOfRingPreordering.inst_isMaxCone {S R : Type*}
+    [CommRing R] [SetLike S R] [RingPreorderingClass S R] {P : S} [RingPreordering.IsOrdering P]
+    (hP : RingPreordering.AddSubgroup.support P = ⊥) : IsMaxCone <| mkOfRingPreordering hP where
+  mem_or_neg_mem' := RingPreordering.mem_or_neg_mem P
+
+@[reducible] def LinearOrderedRing.mkOfRingOrdering {S R : Type*} [CommRing R] [IsDomain R]
+    [SetLike S R] [RingPreorderingClass S R] {P : S} [RingPreordering.IsOrdering P]
+    [DecidablePred (· ∈ P)]
+    (hP : RingPreordering.AddSubgroup.support P = ⊥) : LinearOrderedRing R :=
+  have : DecidablePred (· ∈ RingCone.mkOfRingPreordering hP) := by assumption
+  mkOfCone <| RingCone.mkOfRingPreordering hP
+
+@[reducible] def RingCone.mkOfRingPreordering_field {S F : Type*}
+    [Field F] [SetLike S F] [RingPreorderingClass S F] (P : S) : RingCone F :=
+  mkOfRingPreordering <| RingPreordering.support_eq_bot P
+
+variable {S R : Type*} [CommRing R] (I : Ideal R)
+
+#check Ideal.Quotient.one
+
+@[reducible] def RingCone.mkOfRingPoreordering_quot {S R : Type*}
+    [CommRing R] [SetLike S R] [RingPreorderingClass S R] {P : S} [RingPreordering.IsOrdering P] :
+    RingCone (R ⧸ (RingPreordering.Ideal.support P))
+
 /- TODO: orderings with support I induce maximal ring cones on R/I -/
 /- TODO: ordering on an ID <-> ordering on its fraction field -/
