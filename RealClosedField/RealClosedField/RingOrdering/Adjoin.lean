@@ -10,7 +10,7 @@ import Mathlib.Order.Zorn
 ## Adjoining an element to a preordering
 -/
 
-variable {S R : Type*} [CommRing R] [SetLike S R] [RingPreorderingClass S R] (P : S) (a : R)
+variable {R : Type*} [CommRing R] (P : RingPreordering R) (a : R)
 
 namespace Subsemiring
 
@@ -74,19 +74,19 @@ lemma mem_adjoin (h : -1 ∉ Subsemiring.ringPreordering_adjoin P a) : a ∈ adj
 -/
 
 variable {P} in
-theorem minus_one_not_mem_or {x y : R} (h : - (x * y) ∈ P) :
+theorem not_mem_adjoin_or {x y : R} (h : - (x * y) ∈ P) :
     -1 ∉ Subsemiring.ringPreordering_adjoin P x ∨ -1 ∉ Subsemiring.ringPreordering_adjoin P y := by
   by_contra
-  apply minus_one_not_mem P
+  apply RingPreordering.minus_one_not_mem P
   have ⟨s₁, hs₁, s₂, hs₂, eqx⟩ : -1 ∈ Subsemiring.ringPreordering_adjoin P x := by aesop
   have ⟨t₁, ht₁, t₂, ht₂, eqy⟩ : -1 ∈ Subsemiring.ringPreordering_adjoin P y := by aesop
   rw [show -1 = (-(x * y)) * s₂ * t₂ + s₁ + t₁ + (s₁ * t₁) by
     linear_combination (t₁ + 1) * eqx - 1 * x * s₂ * eqy]
   aesop (config := { enableSimp := false })
 
-theorem minus_one_not_mem_or' :
+theorem not_mem_adjoin_or' :
     -1 ∉ Subsemiring.ringPreordering_adjoin P a ∨ -1 ∉ Subsemiring.ringPreordering_adjoin P (-a) :=
-  RingPreordering.minus_one_not_mem_or (by aesop : - (a * (-a)) ∈ P)
+  not_mem_adjoin_or (by aesop : - (a * (-a)) ∈ P)
 
 theorem minus_one_not_mem_ringPreordering_adjoin
     (h : ∀ x y, x ∈ P → y ∈ P → x + (1 + y) * a + 1 ≠ 0) :
@@ -100,10 +100,10 @@ If `F` is a field, `P` is a preordering on `F`, and `a` is an element of `P` suc
 then `-1` is not of the form `x + a * y` with `x` and `y` in `P`.
 -/
 theorem minus_one_not_mem_adjoin_linear
-    {S F : Type*} [Field F] [SetLike S F] [RingPreorderingClass S F] {P : S} {a : F}
+    {F : Type*} [Field F] {P : RingPreordering F} {a : F}
     (ha : -a ∉ P) : -1 ∉ Subsemiring.ringPreordering_adjoin P a := fun ⟨x, hx, y, hy, eqn⟩ =>
   ha <| by
-  have : y ≠ 0 := fun _ => by simpa [*] using minus_one_not_mem P
+  have : y ≠ 0 := fun _ => by aesop
   rw [show -a = x * y⁻¹ + y⁻¹ by field_simp; linear_combination eqn]
   aesop
 
@@ -112,13 +112,13 @@ theorem minus_one_not_mem_adjoin_linear
 -/
 
 theorem exists_le :
-    ∃ Q : RingPreordering R, (P : Set R) ⊆ Q ∧ (a ∈ Q ∨ -a ∈ Q) := by
-  cases RingPreordering.minus_one_not_mem_or' P a with
+    ∃ Q : RingPreordering R, P ≤ Q ∧ (a ∈ Q ∨ -a ∈ Q) := by
+  cases not_mem_adjoin_or' P a with
   | inl h => exact ⟨adjoin h, subset_adjoin _, by aesop⟩
   | inr h => exact ⟨adjoin h, subset_adjoin _, by aesop⟩
 
 theorem exists_lt (hp : a ∉ P) (hn : -a ∉ P) :
-    ∃ Q : RingPreordering R, (P : Set R) ⊂ Q := by
+    ∃ Q : RingPreordering R, P < Q := by
   rcases exists_le P a with ⟨Q, le, p_mem | n_mem⟩
   · exact ⟨Q, lt_of_le_of_ne le <| Ne.symm (ne_of_mem_of_not_mem' p_mem hp)⟩
   · exact ⟨Q, lt_of_le_of_ne le <| Ne.symm (ne_of_mem_of_not_mem' n_mem hn)⟩
@@ -126,16 +126,16 @@ theorem exists_lt (hp : a ∉ P) (hn : -a ∉ P) :
 /- A preordering on `R` that is maximal with respect to inclusion is a prime ordering. -/
 theorem isPrimeOrdering_of_maximal {O : RingPreordering R} (max : IsMax O) :
     IsPrimeOrdering O := isPrimeOrdering_iff.mpr (fun a b h => by
-  cases RingPreordering.minus_one_not_mem_or h with
+  cases not_mem_adjoin_or h with
   | inl h => exact Or.inl <| max (subset_adjoin h) (mem_adjoin h)
   | inr h => exact Or.inr <| max (subset_adjoin h) (mem_adjoin h))
 
 /- Every preordering on `R` extends to a prime ordering. -/
 theorem exists_le_isPrimeOrdering :
-    ∃ O : RingPreordering R, (P : Set R) ⊆ O ∧ IsPrimeOrdering O := by
-  have ⟨O, le, hO⟩ : ∃ O, RingPreorderingClass.toRingPreordering P ≤ O ∧ IsMax O := by
+    ∃ O : RingPreordering R, P ≤ O ∧ IsPrimeOrdering O := by
+  have ⟨O, le, hO⟩ : ∃ O, P ≤ O ∧ IsMax O := by
     refine zorn_le_nonempty_Ici₀ _ (fun _ _ hc _ hQ => ?_) _ (by trivial)
-    simp_all [← bddAbove_def, nonempty_chain_bddAbove _ hc (Set.nonempty_of_mem hQ)]
+    simp_all [← bddAbove_def, nonempty_chain_bddAbove (Set.nonempty_of_mem hQ) hc]
   exact ⟨O, by aesop, isPrimeOrdering_of_maximal hO⟩
 
 /- A prime ordering on `R` is maximal among preorderings iff it is maximal among prime orderings. -/
