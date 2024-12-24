@@ -30,13 +30,11 @@ theorem IsFormallyReal.eq_zero_of_square_eq_zero {R : Type*}
 theorem IsFormallyReal.eq_zero_of_isSumSq_of_sum_eq_zero {R : Type*}
     [NonUnitalNonAssocSemiring R] [IsFormallyReal R] {S₁ S₂ : R}
     (hS₁ : IsSumSq S₁) (hS₂ : IsSumSq S₂) : S₁ + S₂ = 0 → S₁ = 0 := by
-  rw [isSumSq_iff_exists_sum] at *
-  obtain ⟨ι, I, x, rfl⟩ := hS₁; obtain ⟨β, J, y, rfl⟩ := hS₂
-  intro h
-  suffices ∀ i ∈ I, x i = 0
-    by simpa using Finset.sum_eq_zero (f := fun i => x i * x i) (by simp [this · ·])
-  have : ∑ i ∈ I.disjSum J, Sum.elim x y i * Sum.elim x y i = 0 := by simpa
-  exact fun i _ => eq_zero_of_sum_of_squares_eq_zero this (i := Sum.inl i) (by simpa)
+  induction hS₁
+  case zero => aesop
+  case sq_add a S₁ hS₁ ih =>
+    intro h
+    sorry /- TODO : figure this out, can't do directly -/
 
 theorem IsFormallyReal.eq_zero_of_isSumSq_of_sum_eq_zero' {R : Type*}
     [NonUnitalNonAssocSemiring R] [IsFormallyReal R] {S₁ S₂ : R}
