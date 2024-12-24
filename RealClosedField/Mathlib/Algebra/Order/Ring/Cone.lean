@@ -136,9 +136,36 @@ instance RingCone.mkOfRingPreordering.inst_isMaxCone {R : Type*} [CommRing R]
     LinearOrderedRing F :=
   mkOfCone <| RingCone.mkOfRingPreordering_field P
 
-@[reducible] def RingCone.mkOfRingPreordering_quot {R : Type*} [CommRing R] {P : RingPreordering R}
-    [RingPreordering.IsOrdering P] : RingCone (R ⧸ (RingPreordering.Ideal.support P)) :=
-  mkOfRingPreordering (P := P.map Ideal.Quotient.mk_surjective (by simp)) (by aesop)
+@[reducible] def RingCone.mkOfRingPreordering_quot {R : Type*} [CommRing R] (P : RingPreordering R)
+    [RingPreordering.IsOrdering P] : RingCone (R ⧸ (RingPreordering.Ideal.support P)) := by
+  refine mkOfRingPreordering (P := P.map Ideal.Quotient.mk_surjective (by simp)) ?_
+  have : Ideal.map (Ideal.Quotient.mk <| RingPreordering.Ideal.support P)
+    (RingPreordering.Ideal.support P) = ⊥ := by simp
+  ext x
+  apply_fun (x ∈ ·) at this
+  rw [Ideal.mem_map_iff_of_surjective _ Ideal.Quotient.mk_surjective] at this
+  simp_all
+  /- TODO : make this proof better -/
+
+/- TODO : move to the right place -/
+theorem Quotient.image_mk_eq_lift {α : Type*} {s : Setoid α} (A : Set α)
+    (h : ∀ x y, x ≈ y → (x ∈ A ↔ y ∈ A)) :
+    (Quotient.mk s) '' A = (Quotient.lift (· ∈ A) (by simpa)) := by
+  aesop (add unsafe forward Quotient.exists_rep)
+
+@[reducible] def LinearOrderedRing.mkOfRingPreordering_quot {R : Type*} [CommRing R]
+    (P : RingPreordering R) [RingPreordering.IsPrimeOrdering P] [DecidablePred (· ∈ P)] :
+    LinearOrderedRing (R ⧸ (RingPreordering.Ideal.support P)) :=
+  have : DecidablePred (· ∈ RingCone.mkOfRingPreordering_quot P) := by
+    rw [show (· ∈ RingCone.mkOfRingPreordering_quot P) = (· ∈ (Quotient.mk _) '' P) by rfl]
+    have : ∀ x y, (RingPreordering.Ideal.support P).quotientRel x y → (x ∈ P ↔ y ∈ P) :=
+      fun x y hxy => by
+        rw [Submodule.quotientRel_def] at hxy
+        refine ⟨fun h => by have := add_mem h hxy.2; simpa,
+               fun h => by have := add_mem h hxy.1; simpa⟩
+    rw [Quotient.image_mk_eq_lift _ this]
+    exact Quotient.lift.decidablePred (· ∈ P) (by simpa)
+  mkOfCone <| RingCone.mkOfRingPreordering_quot P
 
 /- TODO: orderings with support I induce maximal ring cones on R/I -/
 /- TODO: ordering on an ID <-> ordering on its fraction field -/
