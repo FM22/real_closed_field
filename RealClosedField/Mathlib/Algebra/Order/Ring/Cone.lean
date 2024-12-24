@@ -7,7 +7,7 @@ import RealClosedField.Mathlib.Algebra.Order.Group.Cone
 import Mathlib.Algebra.Order.Ring.Basic
 import Mathlib.Algebra.Ring.Subsemiring.Order
 import RealClosedField.RealClosedField.RingOrdering.Basic
-import Mathlib.RingTheory.Ideal.Quotient.Basic
+import Mathlib.RingTheory.Ideal.Quotient.Operations
 
 /-!
 # Construct ordered rings from rings with a specified positive cone.
@@ -20,10 +20,6 @@ We also provide constructors that convert between
 cones in rings and the corresponding ordered rings.
 -/
 
-/-- `RingConeClass S R` says that `S` is a type of cones in `R`. -/
-class RingConeClass (S R : Type*) [Ring R] [SetLike S R]
-    extends AddGroupConeClass S R, SubsemiringClass S R : Prop
-
 /-- A (positive) cone in a ring is a subsemiring that
 does not contain both `a` and `-a` for any nonzero `a`.
 This is equivalent to being the set of non-negative elements of
@@ -33,19 +29,20 @@ structure RingCone (R : Type*) [Ring R] extends Subsemiring R, AddGroupCone R
 /-- Interpret a cone in a ring as a cone in the underlying additive group. -/
 add_decl_doc RingCone.toAddGroupCone
 
-instance RingCone.instSetLike (R : Type*) [Ring R] : SetLike (RingCone R) R where
+instance (R : Type*) [Ring R] : SetLike (RingCone R) R where
   coe C := C.carrier
   coe_injective' p q h := by cases p; cases q; congr; exact SetLike.ext' h
 
-instance RingCone.instRingConeClass (R : Type*) [Ring R] :
-    RingConeClass (RingCone R) R where
+instance (R : Type*) [Ring R] : SubsemiringClass (RingCone R) R where
   add_mem {C} := C.add_mem'
   zero_mem {C} := C.zero_mem'
   mul_mem {C} := C.mul_mem'
   one_mem {C} := C.one_mem'
-  eq_zero_of_mem_of_neg_mem {C} := C.eq_zero_of_mem_of_neg_mem'
 
 namespace RingCone
+
+protected theorem eq_zero_of_mem_of_neg_mem {R : Type*} [Ring R] {C : RingCone R}
+    {a : R} (h₁ : a ∈ C) (h₂ : -a ∈ C) : a = 0 := C.eq_zero_of_mem_of_neg_mem' h₁ h₂
 
 @[simp]
 theorem mem_toSubsemiring (R : Type*) [Ring R] (C : RingCone R) {x : R} :
@@ -73,16 +70,16 @@ instance nonneg.isMaxCone {T : Type*} [LinearOrderedRing T] : IsMaxCone (nonneg 
 
 end RingCone
 
-variable {S R : Type*} [Ring R] [SetLike S R] [RingConeClass S R] (C : S)
+variable {R : Type*} [Ring R] (C : RingCone R)
 
 /-- Construct a partially ordered ring by designating a cone in a ring.
 Warning: using this def as a constructor in an instance can lead to diamonds
 due to non-customisable field: `lt`. -/
 @[reducible] def OrderedRing.mkOfCone : OrderedRing R where
   __ := ‹Ring R›
-  __ := OrderedAddCommGroup.mkOfCone C
-  zero_le_one := show _ ∈ C by simpa using one_mem C
-  mul_nonneg x y xnn ynn := show _ ∈ C by simpa using mul_mem xnn ynn
+  __ := OrderedAddCommGroup.mkOfCone C.toAddGroupCone
+  zero_le_one := show _ ∈ C by simpa using C.one_mem
+  mul_nonneg _ _ hx hy := show _ ∈ C by simpa using C.mul_mem hx hy
 
 /-- Construct a linearly ordered domain by designating a maximal cone in a domain.
 Warning: using this def as a constructor in an instance can lead to diamonds
@@ -94,74 +91,54 @@ due to non-customisable fields: `lt`, `decidableLT`, `decidableEq`, `compare`. -
   le_total a b := by simpa using mem_or_neg_mem C (b - a)
   decidableLE a b := _
 
-instance RingConeClass.instSetLike_of_isMaxCone {S R : Type*}
-    [CommRing R] [SetLike S R] [RingConeClass S R] : SetLike {x : S // IsMaxCone x} R
-    where
-  coe x := ↑x.val
-  coe_injective' p q h := by cases p; cases q; congr; exact SetLike.ext' h
-
-instance RingConeClass.instRingConeClass_of_isMaxCone {S R : Type*}
-    [CommRing R] [SetLike S R] [RingConeClass S R] : RingConeClass {x : S // IsMaxCone x} R where
-  add_mem := add_mem (S := S)
-  zero_mem {s} := zero_mem (s : S)
-  mul_mem := mul_mem (S := S)
-  one_mem {s} := one_mem (s : S)
-  eq_zero_of_mem_of_neg_mem := eq_zero_of_mem_of_neg_mem (S := S)
-
-open Classical in
-def RingPreordering.mkOfCone {S R : Type*} [Nontrivial R]
-    [CommRing R] [SetLike S R] [RingConeClass S R] (C : S) [IsMaxCone C] :
+@[reducible]
+def RingPreordering.mkOfCone {R : Type*} [Nontrivial R] [CommRing R] (C : RingCone R) [IsMaxCone C] :
     RingPreordering R where
-  __ := RingConeClass.toSubsemiringClass
-  square_mem' x := by
-    cases mem_or_neg_mem C x with
-    | inl hx  => aesop
-    | inr hnx => simpa using (show -x * -x ∈ C by aesop (config := { enableSimp := false }))
-  minus_one_not_mem' h := one_ne_zero <| eq_zero_of_mem_of_neg_mem (one_mem C) h
+  __ := RingCone.toSubsemiring C
+  isSquare_mem' x := by
+    rcases x with ⟨y, rfl⟩
+    cases mem_or_neg_mem C y with
+    | inl h  => aesop
+    | inr h => simpa using (show -y * -y ∈ C by aesop (config := { enableSimp := false }))
+  minus_one_not_mem' h := one_ne_zero <| RingCone.eq_zero_of_mem_of_neg_mem (one_mem _) h
 
-open Classical in
 /-- A maximal cone over a commutative ring `R` is an ordering on `R`. -/
-instance RingConeClass.instIsOrdering_of_isMaxCone {S R : Type*} [Nontrivial R]
-    [CommRing R] [SetLike S R] [RingConeClass S R] (C : S) [IsMaxCone C] :
+instance {R : Type*} [CommRing R] [Nontrivial R] (C : RingCone R) [IsMaxCone C] :
     RingPreordering.IsOrdering <| RingPreordering.mkOfCone C where
-  mem_or_neg_mem' x := by obtain ⟨C, hC⟩ := C; exact mem_or_neg_mem C x
+  mem_or_neg_mem' x := mem_or_neg_mem C x
 
 /- TODO : decide what to do about the maximality typeclasses -/
-/- TODO : decide whether to keep the class pattern for GroupCone and RingCone -/
 
-@[reducible] def RingCone.mkOfRingPreordering {S R : Type*}
-    [CommRing R] [SetLike S R] [RingPreorderingClass S R] {P : S}
+@[reducible] def RingCone.mkOfRingPreordering {R : Type*} [CommRing R] {P : RingPreordering R}
     (hP : RingPreordering.AddSubgroup.support P = ⊥) : RingCone R where
-  __ := (RingPreorderingClass.toRingPreordering P).toSubsemiring
+  __ := P.toSubsemiring
   eq_zero_of_mem_of_neg_mem' {a} := by
     have : ∀ x, x ∈ RingPreordering.AddSubgroup.support P → x ∈ (⊥ : AddSubgroup R) := by simp_all
     rcases hP with -
     aesop
   /- TODO : make this proof less awful -/
 
-instance RingCone.mkOfRingPreordering.inst_isMaxCone {S R : Type*}
-    [CommRing R] [SetLike S R] [RingPreorderingClass S R] {P : S} [RingPreordering.IsOrdering P]
+instance RingCone.mkOfRingPreordering.inst_isMaxCone {R : Type*} [CommRing R]
+    {P : RingPreordering R} [RingPreordering.IsOrdering P]
     (hP : RingPreordering.AddSubgroup.support P = ⊥) : IsMaxCone <| mkOfRingPreordering hP where
   mem_or_neg_mem' := RingPreordering.mem_or_neg_mem P
 
-@[reducible] def LinearOrderedRing.mkOfRingOrdering {S R : Type*} [CommRing R] [IsDomain R]
-    [SetLike S R] [RingPreorderingClass S R] {P : S} [RingPreordering.IsOrdering P]
-    [DecidablePred (· ∈ P)]
+@[reducible] def LinearOrderedRing.mkOfRingOrdering {R : Type*} [CommRing R] [IsDomain R]
+    {P : RingPreordering R} [RingPreordering.IsOrdering P] [DecidablePred (· ∈ P)]
     (hP : RingPreordering.AddSubgroup.support P = ⊥) : LinearOrderedRing R :=
-  have : DecidablePred (· ∈ RingCone.mkOfRingPreordering hP) := by assumption
   mkOfCone <| RingCone.mkOfRingPreordering hP
 
-@[reducible] def RingCone.mkOfRingPreordering_field {S F : Type*}
-    [Field F] [SetLike S F] [RingPreorderingClass S F] (P : S) : RingCone F :=
-  mkOfRingPreordering <| RingPreordering.support_eq_bot P
+@[reducible] def RingCone.mkOfRingPreordering_field {F : Type*} [Field F] (P : RingPreordering F) :
+    RingCone F := mkOfRingPreordering <| RingPreordering.support_eq_bot P
 
-variable {S R : Type*} [CommRing R] (I : Ideal R)
+@[reducible] def LinearOrderedRing.mkOfRingPreordering_field {F : Type*} [Field F]
+    (P : RingPreordering F) [DecidablePred (· ∈ P)] [RingPreordering.IsOrdering P] :
+    LinearOrderedRing F :=
+  mkOfCone <| RingCone.mkOfRingPreordering_field P
 
-#check Ideal.Quotient.one
-
-@[reducible] def RingCone.mkOfRingPoreordering_quot {S R : Type*}
-    [CommRing R] [SetLike S R] [RingPreorderingClass S R] {P : S} [RingPreordering.IsOrdering P] :
-    RingCone (R ⧸ (RingPreordering.Ideal.support P))
+@[reducible] def RingCone.mkOfRingPreordering_quot {R : Type*} [CommRing R] {P : RingPreordering R}
+    [RingPreordering.IsOrdering P] : RingCone (R ⧸ (RingPreordering.Ideal.support P)) :=
+  mkOfRingPreordering (P := P.map Ideal.Quotient.mk_surjective (by simp)) (by aesop)
 
 /- TODO: orderings with support I induce maximal ring cones on R/I -/
 /- TODO: ordering on an ID <-> ordering on its fraction field -/

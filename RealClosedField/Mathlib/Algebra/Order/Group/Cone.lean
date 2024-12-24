@@ -17,20 +17,6 @@ We also provide constructors that convert between
 cones in groups and the corresponding ordered groups.
 -/
 
-/-- `AddGroupConeClass S G` says that `S` is a type of cones in `G`. -/
-class AddGroupConeClass (S : Type*) (G : outParam Type*) [AddCommGroup G] [SetLike S G]
-    extends AddSubmonoidClass S G : Prop where
-  eq_zero_of_mem_of_neg_mem {C : S} {a : G} : a ∈ C → -a ∈ C → a = 0
-
-/-- `GroupConeClass S G` says that `S` is a type of cones in `G`. -/
-@[to_additive]
-class GroupConeClass (S : Type*) (G : outParam Type*) [CommGroup G] [SetLike S G] extends
-    SubmonoidClass S G : Prop where
-  eq_one_of_mem_of_inv_mem {C : S} {a : G} : a ∈ C → a⁻¹ ∈ C → a = 1
-
-export GroupConeClass (eq_one_of_mem_of_inv_mem)
-export AddGroupConeClass (eq_zero_of_mem_of_neg_mem)
-
 /-- A (positive) cone in an abelian group is a submonoid that
 does not contain both `a` and `-a` for any nonzero `a`.
 This is equivalent to being the set of non-negative elements of
@@ -47,20 +33,23 @@ structure GroupCone (G : Type*) [CommGroup G] extends Submonoid G where
   eq_one_of_mem_of_inv_mem' {a} : a ∈ carrier → a⁻¹ ∈ carrier → a = 1
 
 @[to_additive]
-instance GroupCone.instSetLike (G : Type*) [CommGroup G] : SetLike (GroupCone G) G where
+instance (G : Type*) [CommGroup G] : SetLike (GroupCone G) G where
   coe C := C.carrier
   coe_injective' p q h := by cases p; cases q; congr; exact SetLike.ext' h
 
 @[to_additive]
-instance GroupCone.instGroupConeClass (G : Type*) [CommGroup G] :
-    GroupConeClass (GroupCone G) G where
+instance (G : Type*) [CommGroup G] : SubmonoidClass (GroupCone G) G where
   mul_mem {C} := C.mul_mem'
   one_mem {C} := C.one_mem'
-  eq_one_of_mem_of_inv_mem {C} := C.eq_one_of_mem_of_inv_mem'
+
+@[to_additive]
+protected theorem GroupCone.eq_one_of_mem_of_inv_mem {G : Type*} [CommGroup G] {C : GroupCone G}
+    {a : G} (h₁ : a ∈ C) (h₂ : a⁻¹ ∈ C) : a = 1 := C.eq_one_of_mem_of_inv_mem' h₁ h₂
 
 /-- Typeclass for maximal additive cones. -/
 class IsMaxCone {S G : Type*} [AddCommGroup G] [SetLike S G] (C : S) : Prop where
   mem_or_neg_mem' (a : G) : a ∈ C ∨ -a ∈ C
+/- TODO : decide whether to unify with RingPreordering.IsOrdering as a "mixin" -/
 
 /-- Typeclass for maximal multiplicative cones. -/
 @[to_additive IsMaxCone]
@@ -96,25 +85,24 @@ instance oneLE.isMaxMulCone {H : Type*} [LinearOrderedCommGroup H] : IsMaxMulCon
 
 end GroupCone
 
-variable {S G : Type*} [CommGroup G] [SetLike S G] (C : S)
+variable {G : Type*} [CommGroup G] (C : GroupCone G)
 
 /-- Construct a partially ordered abelian group by designating a cone in an abelian group. -/
 @[to_additive (attr := reducible)
 "Construct a partially ordered abelian group by designating a cone in an abelian group."]
-def OrderedCommGroup.mkOfCone [GroupConeClass S G] :
+def OrderedCommGroup.mkOfCone :
     OrderedCommGroup G where
   le a b := b / a ∈ C
   le_refl a := by simp [one_mem]
   le_trans a b c nab nbc := by simpa using mul_mem nbc nab
   le_antisymm a b nab nba := by
-    simpa [div_eq_one, eq_comm] using eq_one_of_mem_of_inv_mem nab (by simpa using nba)
+    simpa [div_eq_one, eq_comm] using GroupCone.eq_one_of_mem_of_inv_mem nab (by simpa using nba)
   mul_le_mul_left a b nab c := by simpa using nab
 
 /-- Construct a linearly ordered abelian group by designating a maximal cone in an abelian group. -/
 @[to_additive (attr := reducible)
 "Construct a linearly ordered abelian group by designating a maximal cone in an abelian group."]
-def LinearOrderedCommGroup.mkOfCone
-    [GroupConeClass S G] [IsMaxMulCone C] (dec : DecidablePred (· ∈ C)) :
+def LinearOrderedCommGroup.mkOfCone [IsMaxMulCone C] (dec : DecidablePred (· ∈ C)) :
     LinearOrderedCommGroup G where
   __ := OrderedCommGroup.mkOfCone C
   le_total a b := by simpa using mem_or_inv_mem C (b / a)
