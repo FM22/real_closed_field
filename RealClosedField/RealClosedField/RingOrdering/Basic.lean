@@ -9,6 +9,7 @@ import Mathlib.RingTheory.Ideal.Maps
 import Mathlib.Tactic.LinearCombination
 import Mathlib.Tactic.FieldSimp
 import Mathlib.Algebra.CharP.Two
+import RealClosedField.Mathlib.Algebra.Ring.Semireal.Basic
 
 variable {R : Type*} [CommRing R] {P : RingPreordering R}
 
@@ -48,6 +49,13 @@ theorem Field.inv_mem {F : Type*} [Field F] {P : RingPreordering F} {a : F} (ha 
   rw [show a⁻¹ = a * (a⁻¹ * a⁻¹) by field_simp]
   aesop
 
+/- TODO : decide whether to rewrite RingPreordering stuff to use IsSquare -/
+/- TODO : decide whether/how to improve IsSquare automation -/
+theorem mem_of_isSumSq {x : R} (hx : IsSumSq x) : x ∈ P := sorry
+
+section mk'
+variable {R : Type*} [CommRing R] {P : Set R} {add} {mul} {sq} {minus}
+
 /- Construct a preordering from a minimal set of axioms. -/
 def mk' {R : Type*} [CommRing R] (P : Set R)
     (add   : ∀ {x y : R}, x ∈ P → y ∈ P → x + y ∈ P)
@@ -63,13 +71,10 @@ def mk' {R : Type*} [CommRing R] (P : Set R)
   zero_mem' := by simpa using sq 0
   one_mem' := by simpa using sq 1
 
-@[simp]
-theorem mem_mk' {R : Type*} [CommRing R] {P : Set R} {add} {mul} {sq} {minus} {x : R} :
-    x ∈ mk' P add mul sq minus ↔ x ∈ P := by rfl
+@[simp] theorem mem_mk' {x : R} : x ∈ mk' P add mul sq minus ↔ x ∈ P := Iff.rfl
+@[simp, norm_cast] theorem coe_mk' {minus} : mk' P add mul sq minus = P := rfl
 
-@[simp]
-theorem coe_mk' {R : Type*} [CommRing R] {P : Set R} {add} {mul} {sq} {minus} :
-    mk' P add mul sq minus = P := rfl
+end mk'
 
 variable (P) in
 theorem AddSubgroup.one_not_mem_support : 1 ∉ support P := by aesop
@@ -176,16 +181,18 @@ theorem isPrimeOrdering_iff :
 
 /-! ## Order operations -/
 
+section Inf
+variable {P₁ P₂ : RingPreordering R}
+
 instance : Min (RingPreordering R) where
   min P₁ P₂ := { min P₁.toSubsemiring P₂.toSubsemiring with
-                  square_mem' x := by aesop
+                  square_mem' := by aesop
                   minus_one_not_mem' := by aesop }
 
 @[simp]
-theorem coe_inf {P₁ P₂ : RingPreordering R} : ↑(P₁ ⊓ P₂) = (P₁ ∩ P₂ : Set R) := rfl
-
-@[simp]
-theorem mem_inf {P₁ P₂ : RingPreordering R} {x : R} : x ∈ P₁ ⊓ P₂ ↔ x ∈ P₁ ∧ x ∈ P₂ := Iff.rfl
+theorem inf_toSubsemiring : (P₁ ⊓ P₂).toSubsemiring = P₁.toSubsemiring ⊓ P₂.toSubsemiring := rfl
+@[simp] theorem mem_inf {x : R} : x ∈ P₁ ⊓ P₂ ↔ x ∈ P₁ ∧ x ∈ P₂ := Iff.rfl
+@[simp, norm_cast] theorem coe_inf : ↑(P₁ ⊓ P₂) = (P₁ ∩ P₂ : Set R) := rfl
 
 instance : SemilatticeInf (RingPreordering R) where
   inf := (· ⊓ ·)
@@ -193,6 +200,12 @@ instance : SemilatticeInf (RingPreordering R) where
   inf_le_right _ _ := by simp_all [← SetLike.coe_subset_coe]
   le_inf _ _ _ _ _ := by simp_all [← SetLike.coe_subset_coe]
 
+end Inf
+
+section sInf
+variable {S : Set (RingPreordering R)} {hS : S.Nonempty}
+
+variable (hS) in
 def sInf {S : Set (RingPreordering R)} (hS : S.Nonempty) : RingPreordering R where
   __ := InfSet.sInf (RingPreordering.toSubsemiring '' S)
   square_mem' x := by aesop (add simp Submonoid.mem_iInf)
@@ -200,29 +213,36 @@ def sInf {S : Set (RingPreordering R)} (hS : S.Nonempty) : RingPreordering R whe
                                       unsafe forward (Set.Nonempty.some_mem hS))
 
 @[simp]
-theorem coe_sInf {S : Set (RingPreordering R)} (hS : S.Nonempty) :
-    (sInf hS : Set R) = ⋂ P ∈ S, P := by
+theorem sInf_toSubsemiring :
+  (sInf hS).toSubsemiring = InfSet.sInf (RingPreordering.toSubsemiring '' S) := rfl
+
+@[simp, norm_cast]
+theorem coe_sInf : (sInf hS : Set R) = ⋂ P ∈ S, P := by
   have : (sInf hS : Set R) = ⋂ P ∈ (RingPreordering.toSubsemiring '' S), P := rfl
   simp_all
 
 @[simp]
-theorem mem_sInf {S : Set (RingPreordering R)} (hS : S.Nonempty) {x : R} :
-    x ∈ sInf hS ↔ ∀ p ∈ S, x ∈ p := by
+theorem mem_sInf {x : R} : x ∈ sInf hS ↔ ∀ p ∈ S, x ∈ p := by
   rw [show x ∈ sInf hS ↔ x ∈ (sInf hS : Set R) by simp [-coe_sInf]]
   simp_all
 
-theorem sInf_le {S : Set (RingPreordering R)} (hS : S.Nonempty) {P} (hP : P ∈ S) :
-    sInf hS ≤ P := by
+variable (hS) in
+theorem sInf_le {P} (hP : P ∈ S) : sInf hS ≤ P := by
   rw [← SetLike.coe_subset_coe]
   simpa using Set.biInter_subset_of_mem hP
 
-theorem le_sInf {S : Set (RingPreordering R)} (hS : S.Nonempty) {P} (hP : ∀ Q ∈ S, P ≤ Q) :
-    P ≤ sInf hS := by
-    rw [← SetLike.coe_subset_coe]
-    simpa using Set.subset_iInter₂ hP
+variable (hS) in
+theorem le_sInf {P} (hP : ∀ Q ∈ S, P ≤ Q) : P ≤ sInf hS := by
+  rw [← SetLike.coe_subset_coe]
+  simpa using Set.subset_iInter₂ hP
 
-def sSup {S : Set (RingPreordering R)} (hS : S.Nonempty) (hSd : DirectedOn (· ≤ ·) S) :
-    RingPreordering R where
+end sInf
+
+section sSup
+variable {S : Set (RingPreordering R)} {hS : S.Nonempty} {hSd : DirectedOn (· ≤ ·) S}
+
+variable (hS) (hSd) in
+def sSup : RingPreordering R where
   __ := SupSet.sSup (toSubsemiring '' S)
   square_mem' x := by
     have : DirectedOn (· ≤ ·) (toSubsemiring '' S) := directedOn_image.mpr hSd
@@ -234,30 +254,53 @@ def sSup {S : Set (RingPreordering R)} (hS : S.Nonempty) (hSd : DirectedOn (· �
                unsafe forward (Set.Nonempty.some_mem hS))
 
 @[simp]
-theorem coe_sSup {S : Set (RingPreordering R)} (hS : S.Nonempty) (hSd : DirectedOn (· ≤ ·) S) :
-    (sSup hS hSd : Set R) = ⋃ P ∈ S, P := by
+theorem sSup_toSubsemiring :
+  (sSup hS hSd).toSubsemiring = SupSet.sSup (RingPreordering.toSubsemiring '' S) := rfl
+
+@[simp, norm_cast]
+theorem coe_sSup : (sSup hS hSd : Set R) = ⋃ P ∈ S, P := by
   have : (sSup hS hSd : Set R) = SupSet.sSup (toSubsemiring '' S) := rfl
   simp_all [Subsemiring.coe_sSup_of_directedOn (by aesop) <| directedOn_image.mpr hSd]
 
 @[simp]
-theorem mem_sSup {S : Set (RingPreordering R)} (hS : S.Nonempty) (hSd : DirectedOn (· ≤ ·) S)
-    {x : R} : x ∈ sSup hS hSd ↔ ∃ p ∈ S, x ∈ p := by
+theorem mem_sSup {x : R} : x ∈ sSup hS hSd ↔ ∃ p ∈ S, x ∈ p := by
   rw [show x ∈ sSup hS hSd ↔ x ∈ (sSup hS hSd : Set R) by simp [-coe_sSup]]
   simp_all
 
-theorem le_sSup {S : Set (RingPreordering R)} (hS : S.Nonempty) (hSd : DirectedOn (· ≤ ·) S)
-      {P} (hP : P ∈ S) : P ≤ sSup hS hSd := by
+variable (hS) (hSd) in
+theorem le_sSup {P} (hP : P ∈ S) : P ≤ sSup hS hSd := by
   rw [← SetLike.coe_subset_coe]
   simpa using Set.subset_biUnion_of_mem hP
 
-theorem sSup_le {S : Set (RingPreordering R)} (hS : S.Nonempty) (hSd : DirectedOn (· ≤ ·) S)
-      {P} (hP : ∀ Q ∈ S, Q ≤ P) : sSup hS hSd ≤ P := by
-    rw [← SetLike.coe_subset_coe]
-    simpa using Set.iUnion₂_subset hP
+variable (hS) (hSd) in
+theorem sSup_le {P} (hP : ∀ Q ∈ S, Q ≤ P) : sSup hS hSd ≤ P := by
+  rw [← SetLike.coe_subset_coe]
+  simpa using Set.iUnion₂_subset hP
+
+end sSup
 
 theorem nonempty_chain_bddAbove {S : Set (RingPreordering R)}
     (hS : S.Nonempty) (hSc : IsChain (· ≤ ·) S) : BddAbove S :=
   ⟨sSup hS <| IsChain.directedOn hSc, fun _ => le_sSup hS <| IsChain.directedOn hSc⟩
+
+section Bot
+variable [IsSemireal R]
+
+instance : Bot (RingPreordering R) where
+  bot := { Subsemiring.sumSqIn R with
+            square_mem' := by aesop
+            minus_one_not_mem' := by simpa using IsSemireal.not_isSumSq_neg_one }
+
+@[simp] lemma bot_toSubsemiring : (⊥ : RingPreordering R).toSubsemiring = .sumSqIn R := rfl
+@[simp] lemma mem_sumSqIn : a ∈ (⊥ : RingPreordering R) ↔ IsSumSq a := Iff.rfl
+@[simp, norm_cast] lemma coe_sumSqIn : (⊥ : RingPreordering R) = {x : R | IsSumSq x} := rfl
+
+instance : OrderBot (RingPreordering R) where
+  bot := ⊥
+  bot_le := by simp [← SetLike.coe_subset_coe]; intro y hy; simp_all [mem_of_isSumSq]
+/- TODO : fix this proof-/
+
+end Bot
 
 variable {A B C : Type*} [CommRing A] [CommRing B] [CommRing C]
 
@@ -393,3 +436,5 @@ instance map.instIsPrimeOrdering {f : A →+* B} {P : RingPreordering A} [IsPrim
   infer_instance
 
 end RingPreordering
+
+/- TODO : look into changing aesop mul_mem tag to unsafe -/

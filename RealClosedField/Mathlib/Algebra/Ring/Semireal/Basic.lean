@@ -4,7 +4,6 @@ Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Florent Schaffhauser, Artie Khovanov
 -/
 import RealClosedField.Mathlib.Algebra.Ring.SumsOfSquares
-import RealClosedField.RealClosedField.RingOrdering.Basic
 
 /-!
 # Semireal rings
@@ -39,31 +38,10 @@ class IsSemireal [Add R] [Mul R] [One R] [Zero R] : Prop where
 @[deprecated (since := "2024-08-09")] alias isSemireal.neg_one_not_SumSq :=
   IsSemireal.add_one_ne_zero_of_isSumSq
 
-lemma IsSemireal.not_isSumSq_minus_one {R : Type*} [AddGroup R] [One R] [Mul R] [IsSemireal R]:
+lemma IsSemireal.not_isSumSq_neg_one {R : Type*} [AddGroup R] [One R] [Mul R] [IsSemireal R]:
     ¬ IsSumSq (-1 : R) := (by simpa using add_one_ne_zero_of_isSumSq ·)
 
 /-- Linearly ordered semirings in which the property `a ≤ b → ∃ c, a + c = b` holds are semireal. -/
-instance LinearOrderedSemiring.instIsSemireal [LinearOrderedSemiring R] [ExistsAddOfLE R] :
-    IsSemireal R where
-  add_one_ne_zero_of_isSumSq ssa amo :=
-    zero_ne_one' R (le_antisymm zero_le_one
-      (le_of_le_of_eq (le_add_of_nonneg_right ssa.nonneg) amo))
-
-namespace RingPreordering
-variable {T : Type*} [CommRing T] [IsSemireal T] {a : T}
-
-variable (T) in
-/--
-In a commutative semireal ring `R`, the type `Subsemiring.sumSqIn R`
-is the preordering of sums of squares in `R`.
--/
-def sumSqIn : RingPreordering T where
-  __ := Subsemiring.sumSqIn T
-  square_mem' {x} := by aesop
-  minus_one_not_mem' := by simpa using IsSemireal.not_isSumSq_minus_one
-
-@[simp] lemma sumSqIn_toSubsemiring : (sumSqIn T).toSubsemiring = .sumSqIn T := rfl
-@[simp] lemma mem_sumSqIn : a ∈ sumSqIn T ↔ IsSumSq a := Iff.rfl
-@[simp, norm_cast] lemma coe_sumSqIn : sumSqIn T = {x : T | IsSumSq x} := rfl
-
-end RingPreordering
+instance [LinearOrderedSemiring R] [ExistsAddOfLE R] : IsSemireal R where
+  add_one_ne_zero_of_isSumSq ssa amo := zero_ne_one' R (le_antisymm zero_le_one
+                                          (le_of_le_of_eq (le_add_of_nonneg_right ssa.nonneg) amo))

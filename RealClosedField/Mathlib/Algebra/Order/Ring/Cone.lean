@@ -3,7 +3,7 @@ Copyright (c) 2016 Jeremy Avigad. All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Jeremy Avigad, Leonardo de Moura, Mario Carneiro, Artie Khovanov
 -/
-import Mathlib.Algebra.Order.Group.Cone
+import RealClosedField.Mathlib.Algebra.Order.Group.Cone
 import Mathlib.Algebra.Order.Ring.Basic
 import Mathlib.Algebra.Ring.Subsemiring.Order
 import RealClosedField.RealClosedField.RingOrdering.Basic
@@ -109,26 +109,25 @@ instance RingConeClass.instRingConeClass_of_isMaxCone {S R : Type*}
   eq_zero_of_mem_of_neg_mem := eq_zero_of_mem_of_neg_mem (S := S)
 
 open Classical in
-instance RingConeClass.instRingPreorderingClass_of_isMaxCone {S R : Type*} [Nontrivial R]
-    [CommRing R] [SetLike S R] [RingConeClass S R] :
-    RingPreorderingClass {x : S // IsMaxCone x} (R := R) where
+def RingPreordering.mkOfCone {S R : Type*} [Nontrivial R]
+    [CommRing R] [SetLike S R] [RingConeClass S R] (C : S) [IsMaxCone C] :
+    RingPreordering R where
   __ := RingConeClass.toSubsemiringClass
-  square_mem C x := by
-    obtain ⟨C, hC⟩ := C
+  square_mem' x := by
     cases mem_or_neg_mem C x with
     | inl hx  => aesop
     | inr hnx => simpa using (show -x * -x ∈ C by aesop (config := { enableSimp := false }))
-  minus_one_not_mem C h := one_ne_zero <| eq_zero_of_mem_of_neg_mem (one_mem C) h
+  minus_one_not_mem' h := one_ne_zero <| eq_zero_of_mem_of_neg_mem (one_mem C) h
 
 open Classical in
 /-- A maximal cone over a commutative ring `R` is an ordering on `R`. -/
 instance RingConeClass.instIsOrdering_of_isMaxCone {S R : Type*} [Nontrivial R]
-    [CommRing R] [SetLike S R] [RingConeClass S R] (C : {x : S // IsMaxCone x}) :
-    RingPreordering.IsOrdering C where
+    [CommRing R] [SetLike S R] [RingConeClass S R] (C : S) [IsMaxCone C] :
+    RingPreordering.IsOrdering <| RingPreordering.mkOfCone C where
   mem_or_neg_mem' x := by obtain ⟨C, hC⟩ := C; exact mem_or_neg_mem C x
 
-/- TODO : decide whether to keep the above cursed subtype instance,
-          or whether to change to a def. -/
+/- TODO : decide what to do about the maximality typeclasses -/
+/- TODO : decide whether to keep the class pattern for GroupCone and RingCone -/
 
 @[reducible] def RingCone.mkOfRingPreordering {S R : Type*}
     [CommRing R] [SetLike S R] [RingPreorderingClass S R] {P : S}
