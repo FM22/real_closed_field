@@ -9,7 +9,7 @@ import Mathlib.Data.Fintype.BigOperators
 namespace Submonoid
 
 @[to_additive]
-theorem exists_finset_prod_of_mem_closure {M : Type*} [CommMonoid M] {s : Set M} {x : M}
+theorem exists_finsetProd_of_mem_closure {M : Type*} [CommMonoid M] {s : Set M} {x : M}
     (hx : x ∈ closure s) :
     ∃ (α : Type) (I : Finset α) (f : α → M), (∀ i ∈ I, f i ∈ s) ∧ ∏ i ∈ I, f i = x := by
   induction hx using Submonoid.closure_induction_left
