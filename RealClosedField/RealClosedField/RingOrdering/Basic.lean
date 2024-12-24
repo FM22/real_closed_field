@@ -4,12 +4,12 @@ Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Florent Schaffhauser, Artie Khovanov
 -/
 
-import RealClosedField.RealClosedField.RingOrdering.Defs
 import Mathlib.RingTheory.Ideal.Maps
 import Mathlib.Tactic.LinearCombination
 import Mathlib.Tactic.FieldSimp
 import Mathlib.Algebra.CharP.Two
-import RealClosedField.Mathlib.Algebra.Ring.Semireal.Basic
+import RealClosedField.RealClosedField.RingOrdering.Defs
+import RealClosedField.Mathlib.Algebra.Ring.Semireal.Defs
 
 variable {R : Type*} [CommRing R] {P : RingPreordering R}
 
@@ -50,8 +50,7 @@ theorem Field.inv_mem {F : Type*} [Field F] {P : RingPreordering F} {a : F} (ha 
   aesop
 
 theorem mem_of_isSumSq {x : R} (hx : IsSumSq x) : x ∈ P := by
-  rcases IsSumSq.exists_sum hx with ⟨_, _, _, _, rfl⟩
-  exact sum_mem (by aesop)
+  induction hx using IsSumSq.rec' <;> aesop
 
 section mk'
 variable {R : Type*} [CommRing R] {P : Set R} {add} {mul} {sq} {minus}
