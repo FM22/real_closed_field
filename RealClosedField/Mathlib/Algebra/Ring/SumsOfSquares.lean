@@ -50,7 +50,7 @@ theorem IsSumSq.rec' [Mul R] [Add R] [Zero R]
       motive (a + S) (by rcases ha with ⟨_, rfl⟩; exact sq_add hS))
     {S : R} (h : IsSumSq S) : motive S h :=
   match h with
-  | .zero         => zero
+  | .zero      => zero
   | .sq_add ih => sq_add (.mul_self _) ih (rec' zero sq_add _)
 
 /-- In an additive monoid with multiplication,
