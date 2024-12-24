@@ -49,9 +49,9 @@ theorem Field.inv_mem {F : Type*} [Field F] {P : RingPreordering F} {a : F} (ha 
   rw [show a⁻¹ = a * (a⁻¹ * a⁻¹) by field_simp]
   aesop
 
-/- TODO : decide whether to rewrite RingPreordering stuff to use IsSquare -/
-/- TODO : decide whether/how to improve IsSquare automation -/
-theorem mem_of_isSumSq {x : R} (hx : IsSumSq x) : x ∈ P := sorry
+theorem mem_of_isSumSq {x : R} (hx : IsSumSq x) : x ∈ P := by
+  rcases IsSumSq.exists_sum hx with ⟨_, _, _, _, rfl⟩
+  exact sum_mem (by aesop)
 
 section mk'
 variable {R : Type*} [CommRing R] {P : Set R} {add} {mul} {sq} {minus}
@@ -66,7 +66,7 @@ def mk' {R : Type*} [CommRing R] (P : Set R)
   carrier := P
   add_mem' {x y} := by simpa using add
   mul_mem' {x y} := by simpa using mul
-  square_mem' x := by simpa using sq x
+  isSquare_mem' hx := by rcases hx with ⟨y, hy⟩; aesop /- TODO : automate? -/
   minus_one_not_mem' := by simpa using minus
   zero_mem' := by simpa using sq 0
   one_mem' := by simpa using sq 1
@@ -122,7 +122,7 @@ theorem support_eq_bot {F : Type*} [Field F] (P : RingPreordering F) :
   refine AddSubgroup.ext (fun x => Iff.intro (fun h => ?_) (fun h => by aesop))
   by_contra hz
   apply RingPreordering.minus_one_not_mem P
-  rw [show -1 = -x * (x)⁻¹ by field_simp [show x ≠ 0 by simp_all]]
+  rw [show -1 = -x * x⁻¹ by field_simp [show x ≠ 0 by simp_all]]
   aesop (erase simp neg_mul)
 
 /-!
@@ -186,7 +186,7 @@ variable {P₁ P₂ : RingPreordering R}
 
 instance : Min (RingPreordering R) where
   min P₁ P₂ := { min P₁.toSubsemiring P₂.toSubsemiring with
-                  square_mem' := by aesop
+                  isSquare_mem' := by aesop
                   minus_one_not_mem' := by aesop }
 
 @[simp]
@@ -208,7 +208,7 @@ variable {S : Set (RingPreordering R)} {hS : S.Nonempty}
 variable (hS) in
 def sInf {S : Set (RingPreordering R)} (hS : S.Nonempty) : RingPreordering R where
   __ := InfSet.sInf (RingPreordering.toSubsemiring '' S)
-  square_mem' x := by aesop (add simp Submonoid.mem_iInf)
+  isSquare_mem' x := by aesop (add simp Submonoid.mem_iInf)
   minus_one_not_mem' := by aesop (add simp Submonoid.mem_iInf,
                                       unsafe forward (Set.Nonempty.some_mem hS))
 
@@ -244,7 +244,7 @@ variable {S : Set (RingPreordering R)} {hS : S.Nonempty} {hSd : DirectedOn (· �
 variable (hS) (hSd) in
 def sSup : RingPreordering R where
   __ := SupSet.sSup (toSubsemiring '' S)
-  square_mem' x := by
+  isSquare_mem' x := by
     have : DirectedOn (· ≤ ·) (toSubsemiring '' S) := directedOn_image.mpr hSd
     aesop (add simp Subsemiring.mem_sSup_of_directedOn,
                unsafe forward (Set.Nonempty.some_mem hS))
@@ -288,7 +288,7 @@ variable [IsSemireal R]
 
 instance : Bot (RingPreordering R) where
   bot := { Subsemiring.sumSqIn R with
-            square_mem' := by aesop
+            isSquare_mem' := by aesop
             minus_one_not_mem' := by simpa using IsSemireal.not_isSumSq_neg_one }
 
 @[simp] lemma bot_toSubsemiring : (⊥ : RingPreordering R).toSubsemiring = .sumSqIn R := rfl
@@ -309,7 +309,7 @@ variable {A B C : Type*} [CommRing A] [CommRing B] [CommRing C]
 /-- The preimage of a preordering along a ring homomorphism is a preordering. -/
 def comap (f : A →+* B) (P : RingPreordering B) : RingPreordering A where
   __ := P.toSubsemiring.comap f
-  square_mem' x := by aesop
+  isSquare_mem' := by aesop (add unsafe apply IsSquare.map) /- TODO : automate? -/
   minus_one_not_mem' := by aesop
 
 @[simp]
@@ -360,8 +360,9 @@ instance comap.instIsPrimeOrdering (P : RingPreordering B) [IsPrimeOrdering P] (
 def map {f : A →+* B} {P : RingPreordering A} (hf : Function.Surjective f)
     (hsupp : (RingHom.ker f : Set A) ⊆ AddSubgroup.support P) : RingPreordering B where
   __ := P.toSubsemiring.map f
-  square_mem' x := by
-    obtain ⟨x', rfl⟩ := hf x
+  isSquare_mem' hx := by
+    rcases hx with ⟨y, rfl⟩
+    rcases hf y with ⟨y', rfl⟩ /- TODO : generalise? ie Surjective f → IsSquare x → ∃ y, f y = x ∧ IsSquare y -/
     aesop
   minus_one_not_mem' := fun ⟨x', hx', _⟩ => by
     have : -(x' + 1) + x' ∈ P := add_mem (hsupp (show f (x' + 1) = 0 by simp_all)).2 hx'
@@ -436,5 +437,3 @@ instance map.instIsPrimeOrdering {f : A →+* B} {P : RingPreordering A} [IsPrim
   infer_instance
 
 end RingPreordering
-
-/- TODO : look into changing aesop mul_mem tag to unsafe -/

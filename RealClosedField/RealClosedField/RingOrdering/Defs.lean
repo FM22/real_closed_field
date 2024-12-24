@@ -6,6 +6,7 @@ Authors: Florent Schaffhauser, Artie Khovanov
 
 import Mathlib.Algebra.Ring.Subsemiring.Basic
 import Mathlib.RingTheory.Ideal.Basic
+import Mathlib.Algebra.Group.Even
 
 /-!
 ## Preorderings
@@ -17,7 +18,7 @@ variable (R : Type*) [CommRing R]
 but not containing `-1`. -/
 @[ext]
 structure RingPreordering extends Subsemiring R where
-  square_mem' (x : R) : x * x ∈ carrier
+  isSquare_mem' {x : R} (hx : IsSquare x) : x ∈ carrier
   minus_one_not_mem' : -1 ∉ carrier
 
 namespace RingPreordering
@@ -36,9 +37,16 @@ instance : SubsemiringClass (RingPreordering R) R where
 
 variable {R}
 
+/- TODO : make this change in the actual location -/
+attribute [- aesop] mul_mem add_mem
+attribute [aesop unsafe 90% apply (rule_sets := [SetLike])] mul_mem add_mem
+
+@[aesop unsafe 50% apply (rule_sets := [SetLike])]
+protected theorem isSquare_mem (P : RingPreordering R) {x : R} (hx : IsSquare x) : x ∈ P :=
+  RingPreordering.isSquare_mem' _ hx
+
 @[aesop safe 0 apply (rule_sets := [SetLike])]
-protected theorem square_mem (P : RingPreordering R) (x : R) : x * x ∈ P :=
-  RingPreordering.square_mem' _ _
+protected theorem mul_self_mem (P : RingPreordering R) (x : R) : x * x ∈ P := by aesop
 
 @[aesop unsafe 20% forward (rule_sets := [SetLike])]
 protected theorem minus_one_not_mem (P : RingPreordering R) : -1 ∉ P :=
@@ -71,7 +79,7 @@ protected def copy : RingPreordering R where
   add_mem' ha hb := by aesop
   one_mem' := by aesop
   mul_mem' ha hb := by aesop
-  square_mem' := by aesop
+  isSquare_mem' := by aesop
   minus_one_not_mem' := by aesop
 
 @[simp]
