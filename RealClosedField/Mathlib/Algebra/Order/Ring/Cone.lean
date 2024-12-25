@@ -8,6 +8,7 @@ import Mathlib.Algebra.Order.Ring.Basic
 import Mathlib.Algebra.Ring.Subsemiring.Order
 import RealClosedField.RealClosedField.RingOrdering.Basic
 import Mathlib.RingTheory.Ideal.Quotient.Operations
+import Mathlib.GroupTheory.Coset.Defs
 
 /-!
 # Construct ordered rings from rings with a specified positive cone.
@@ -153,16 +154,24 @@ theorem Quotient.image_mk_eq_lift {α : Type*} {s : Setoid α} (A : Set α)
     (Quotient.mk s) '' A = (Quotient.lift (· ∈ A) (by simpa)) := by
   aesop (add unsafe forward Quotient.exists_rep)
 
+/- TODO : move to the right place -/
+@[to_additive]
+theorem QuotientGroup.mem_iff_mem_of_quotientRel {G : Type*} [CommGroup G] {H : Subgroup G}
+    {M : Submonoid G} (hM : (H : Set G) ⊆ M) :
+    ∀ x y, QuotientGroup.leftRel H x y → (x ∈ M ↔ y ∈ M) := fun x y hxy => by
+  rw [QuotientGroup.leftRel_apply] at hxy
+  exact ⟨fun h => by have := mul_mem h <| hM hxy; simpa,
+        fun h => by have := mul_mem h <| hM <| inv_mem hxy; simpa⟩
+
 @[reducible] def LinearOrderedRing.mkOfRingPreordering_quot {R : Type*} [CommRing R]
     (P : RingPreordering R) [RingPreordering.IsPrimeOrdering P] [DecidablePred (· ∈ P)] :
     LinearOrderedRing (R ⧸ (RingPreordering.Ideal.support P)) :=
   have : DecidablePred (· ∈ RingCone.mkOfRingPreordering_quot P) := by
     rw [show (· ∈ RingCone.mkOfRingPreordering_quot P) = (· ∈ (Quotient.mk _) '' P) by rfl]
     have : ∀ x y, (RingPreordering.Ideal.support P).quotientRel x y → (x ∈ P ↔ y ∈ P) :=
-      fun x y hxy => by
-        rw [Submodule.quotientRel_def] at hxy
-        refine ⟨fun h => by have := add_mem h hxy.2; simpa,
-               fun h => by have := add_mem h hxy.1; simpa⟩
+      QuotientAddGroup.mem_iff_mem_of_quotientRel
+        (M := P.toAddSubmonoid) (H := (RingPreordering.Ideal.support P).toAddSubgroup)
+        (by aesop (add unsafe apply Set.sep_subset))
     rw [Quotient.image_mk_eq_lift _ this]
     exact Quotient.lift.decidablePred (· ∈ P) (by simpa)
   mkOfCone <| RingCone.mkOfRingPreordering_quot P
