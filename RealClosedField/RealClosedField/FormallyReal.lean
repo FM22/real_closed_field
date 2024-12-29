@@ -67,7 +67,7 @@ variable {T : Type*} [CommRing T] [IsFormallyReal T] {a : T}
 
 variable (T) in
 /--
-In a commutative formally real ring `R`, the type `Subsemiring.sumSqIn R`
+In a commutative formally real ring `R`, `Subsemiring.sumSqIn R`
 is the cone of sums of squares in `R`.
 -/
 def sumSqIn : RingCone T where

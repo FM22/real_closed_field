@@ -166,6 +166,8 @@ theorem QuotientGroup.mem_iff_mem_of_quotientRel {G : Type*} [CommGroup G] {H : 
 @[reducible] def LinearOrderedRing.mkOfRingPreordering_quot {R : Type*} [CommRing R]
     (P : RingPreordering R) [RingPreordering.IsPrimeOrdering P] [DecidablePred (· ∈ P)] :
     LinearOrderedRing (R ⧸ (RingPreordering.Ideal.support P)) :=
+  /- technical instance -/
+  /- TODO : generalise this quotient instance? -/
   have : DecidablePred (· ∈ RingCone.mkOfRingPreordering_quot P) := by
     rw [show (· ∈ RingCone.mkOfRingPreordering_quot P) = (· ∈ (Quotient.mk _) '' P) by rfl]
     have : ∀ x y, (RingPreordering.Ideal.support P).quotientRel x y → (x ∈ P ↔ y ∈ P) :=
@@ -174,7 +176,4 @@ theorem QuotientGroup.mem_iff_mem_of_quotientRel {G : Type*} [CommGroup G] {H : 
         (by aesop (add unsafe apply Set.sep_subset))
     rw [Quotient.image_mk_eq_lift _ this]
     exact Quotient.lift.decidablePred (· ∈ P) (by simpa)
-  mkOfCone <| RingCone.mkOfRingPreordering_quot P
-
-/- TODO: orderings with support I induce maximal ring cones on R/I -/
-/- TODO: ordering on an ID <-> ordering on its fraction field -/
+  mkOfCone (RingCone.mkOfRingPreordering_quot P)
